@@ -10,6 +10,7 @@ import { TbBulbFilled, TbTextGrammar } from "react-icons/tb";
 import { FaBookOpen } from "react-icons/fa";
 import { BiSolidPlanet } from "react-icons/bi";
 import { IoMdCheckmark } from "react-icons/io";
+import Navbar from "./components/Navbar";
 
 const icons = [<TbBulbFilled className="text-[#edb949]"/>, <FaBookOpen className="text-[#76b2a4]"/>, <TbTextGrammar className="text-[#346a7e]"/>, <BiSolidPlanet className="text-[#76b2a4]"/>];
 const colors = ['bg-[#fff7de]', 'bg-[#e9f5f1]', 'bg-[#c6e3dd]', 'bg-[#e9f5f1]'];
@@ -245,6 +246,7 @@ const ChatStream = () => {
     // Render the chat interface
     return (
         <div className="flex flex-col items-center min-h-screen bg-white text-gray-600">
+            <Navbar/>
             <div className="w-full md:w-4/5 lg:w-3/5 flex flex-col h-screen">
                 {/* Chat messages container */}
                 <div
