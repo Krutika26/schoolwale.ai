@@ -11,6 +11,7 @@ import { FaBookOpen } from "react-icons/fa";
 import { BiSolidPlanet } from "react-icons/bi";
 import { IoMdCheckmark } from "react-icons/io";
 import Navbar from "./components/Navbar";
+import { ChevronLeft, ChevronRight } from 'lucide-react'; // optional icons
 
 const icons = [<TbBulbFilled className="text-[#edb949]"/>, <FaBookOpen className="text-[#76b2a4]"/>, <TbTextGrammar className="text-[#346a7e]"/>, <BiSolidPlanet className="text-[#76b2a4]"/>];
 const colors = ['bg-[#fff7de]', 'bg-[#e9f5f1]', 'bg-[#c6e3dd]', 'bg-[#e9f5f1]'];
@@ -106,6 +107,7 @@ const ChatStream = () => {
     const [messages, setMessages] = useState([]);
     const [chatStarted, setChatStarted] = useState(false);
     const chatContainerRef = useRef(null);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     // Scroll to bottom of chat when new messages are added
     useEffect(() => {
@@ -245,146 +247,169 @@ const ChatStream = () => {
 
     // Render the chat interface
     return (
-        <div className="flex flex-col items-center min-h-screen bg-white text-gray-600">
-            <Navbar/>
-            <div className="w-full md:w-4/5 lg:w-3/5 flex flex-col h-screen">
-                {/* Chat messages container */}
+        <div className="flex flex-col min-h-screen bg-white text-gray-600">
+            <Navbar />
+            <div className="flex flex-grow w-full overflow-hidden">
+                {/* History Sidebar */}
                 <div
-                    ref={chatContainerRef}
-                    className="flex-grow p-6 overflow-y-auto space-y-6 custom-scrollbar"
+                    className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'w-0 p-0' : 'w-1/5 p-4'
+                        } bg-[#ecf7f3] relative overflow-hidden flex flex-col justify-between`}
                 >
-                    <AnimatePresence>
-                        {/* Map through messages and display them */}
-                        {messages.map((message, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.3 }}
-                                className={`flex ${
-                                    message.type === "user"
-                                        ? "justify-end"
-                                        : "justify-start"
-                                }`}
-                            >
-                                <motion.div
-                                    whileHover={{ scale: 1.02 }}
-                                    className={`max-w-[80%] rounded-2xl shadow-lg ${
-                                        message.type === "user"
-                                            ? "bg-[#effaf8] p-4"
-                                            : "bg-white p-4"
-                                    } flex items-start`}
-                                >
-                                    <div className="mr-3 mt-1">
-                                        {message.type === "user" ? (
-                                            <FiUser className="text-xl" />
-                                        ) : (
-                                            <FiCpu className="text-xl" />
-                                        )}
-                                    </div>
-                                    <div>
-                                        {message.type === "user" ? (
-                                            <p className="text-sm whitespace-pre-wrap">
-                                                {message.content}
-                                            </p>
-                                        ) : (
-                                            <Markdown
-                                                content={message.content}
-                                            />
-                                        )}
-                                    </div>
-                                </motion.div>
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                </div>
-                {/* Chat input form */}
-                <form onSubmit={handleSubmit} className="flex items-center">
-                    <motion.input
-                        whileFocus={{ scale: 1.02 }}
-                        type="text"
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        placeholder="Ask anything here..."
-                        className="flex-grow p-4 rounded-xl bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#effaf8] border border-gray-200 shadow-inner"
-                    />
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        type="submit"
-                        className="p-4 rounded-r-xl focus:outline-none focus:ring-2 transition-colors"
-                    >
-                        <FiSend className="text-xl" style={{ color: '#4a7f85' }} />
-                    </motion.button>
-                </form>
-                {/* Chat input area */}
-                <motion.div
-                    initial={{ y: 50, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                >
-                    {/* Display default options if chat hasn't started */}
-                    {!chatStarted && (
-                        <div>
-                            <h2 className="text-gray-600 text-center mb-4">
-                                What else we can help you with. Select from below icon
-                            </h2>
-                            <div className="grid grid-cols-4 gap-10 mb-6">
-                                {defaultOptions.map((optionGroup, index) => (
-                                    <motion.div
-                                        key={index}
-                                        whileHover={{ scale: 1.03 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className={`h-auto min-h-60 w-56 p-4 ${colors[index]} text-gray-600 rounded-xl hover:brightness-110 transition-colors text-sm font-medium shadow-md flex flex-col justify-start text-center`}
-                                    >
-                                        <div className="text-3xl mb-2 flex justify-center">{icons[index]}</div>
-                                        <div className="text-base font-semibold mb-3">{optionGroup.title}</div>
-
-                                        {/* Sub-options */}
-                                        <div className="flex flex-col items-start space-y-2 mt-2">
-                                            {optionGroup.options.map((sub, subIndex) => (
-                                                <button
-                                                    key={subIndex}
-                                                    onClick={() => {
-                                                        setSelectedOptionIndex(index);
-                                                        setSelectedSubOption(sub);
-                                                        setUserInput("");
-                                                    }}
-                                                    className="flex items-center gap-2 text-gray-600 text-xs px-2 py-1 rounded hover:bg-gray-200 text-left w-full"
-                                                >
-                                                    <IoMdCheckmark className="text-[#47735a]" />
-                                                    <span>{sub}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                        
-                                        {/* Input if this card is selected */}
-                                        {selectedOptionIndex === index && selectedSubOption && (
-                                            <div className="mt-4">
-                                                <input
-                                                    type="text"
-                                                    className="w-full px-2 py-1 text-black rounded mb-2"
-                                                    placeholder={`Enter ${selectedSubOption} query...`}
-                                                    value={userInput}
-                                                    onChange={(e) => setUserInput(e.target.value)}
-                                                />
-                                                <button
-                                                    onClick={() => startChat(`${selectedSubOption} ${userInput}`)}
-                                                    className="mt-1 bg-black text-white px-3 py-1 rounded hover:bg-gray-800 text-xs"
-                                                >
-                                                    Submit
-                                                </button>
-                                            </div>
-                                        )}
-                                    </motion.div>
-                                ))}
-                            </div>
-
-                        </div>
+                    {/* Show title only when expanded */}
+                    {!isCollapsed && (
+                        <>
+                            <h1 className="text-xl font-semibold">History</h1>
+                        </>
                     )}
+                </div>
 
-                </motion.div>
+                {/* Toggle Button - absolutely positioned outside the sidebar */}
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className={`absolute top-20 transition-all duration-300 ${isCollapsed ? 'left-2' : 'left-[20%]' // adjust left value based on sidebar width
+                        } p-1 bg-white rounded-full shadow z-50`}
+                >
+                    {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                </button>
+
+                {/* Main Content */}
+                <div className={`flex flex-col flex-grow ${isCollapsed ? 'w-full' : 'w-4/5'} transition-all duration-300 mx-4`}>
+                    {/* Chat messages container */}
+                    <div
+                        ref={chatContainerRef}
+                        className="flex-grow p-6 overflow-y-auto space-y-6 custom-scrollbar"
+                    >
+                        <AnimatePresence>
+                            {/* Map through messages and display them */}
+                            {messages.map((message, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.3 }}
+                                    className={`flex ${message.type === "user"
+                                            ? "justify-end"
+                                            : "justify-start"
+                                        }`}
+                                >
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        className={`max-w-[80%] rounded-2xl shadow-lg ${message.type === "user"
+                                                ? "bg-[#effaf8] p-4"
+                                                : "bg-white p-4"
+                                            } flex items-start`}
+                                    >
+                                        <div className="mr-3 mt-1">
+                                            {message.type === "user" ? (
+                                                <FiUser className="text-xl" />
+                                            ) : (
+                                                <FiCpu className="text-xl" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            {message.type === "user" ? (
+                                                <p className="text-sm whitespace-pre-wrap">
+                                                    {message.content}
+                                                </p>
+                                            ) : (
+                                                <Markdown
+                                                    content={message.content}
+                                                />
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                    {/* Chat input form */}
+                    <form onSubmit={handleSubmit} className="flex items-center">
+                        <motion.input
+                            whileFocus={{ scale: 1.02 }}
+                            type="text"
+                            value={question}
+                            onChange={(e) => setQuestion(e.target.value)}
+                            placeholder="Ask anything here..."
+                            className="flex-grow p-4 rounded-xl bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#effaf8] border border-gray-200 shadow-inner"
+                        />
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            type="submit"
+                            className="p-4 rounded-r-xl focus:outline-none focus:ring-2 transition-colors"
+                        >
+                            <FiSend className="text-xl" style={{ color: '#4a7f85' }} />
+                        </motion.button>
+                    </form>
+                    {/* Chat input area */}
+                    <motion.div
+                        initial={{ y: 50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        {/* Display default options if chat hasn't started */}
+                        {!chatStarted && (
+                            <div>
+                                <h2 className="text-gray-600 text-center mb-4">
+                                    What else we can help you with. Select from below icon
+                                </h2>
+                                <div className="grid grid-cols-4 gap-10 mb-6">
+                                    {defaultOptions.map((optionGroup, index) => (
+                                        <motion.div
+                                            key={index}
+                                            whileHover={{ scale: 1.03 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className={`h-auto min-h-60 w-56 p-4 ${colors[index]} text-gray-600 rounded-xl hover:brightness-110 transition-colors text-sm font-medium shadow-md flex flex-col justify-start text-center`}
+                                        >
+                                            <div className="text-3xl mb-2 flex justify-center">{icons[index]}</div>
+                                            <div className="text-base font-semibold mb-3">{optionGroup.title}</div>
+
+                                            {/* Sub-options */}
+                                            <div className="flex flex-col items-start space-y-2 mt-2">
+                                                {optionGroup.options.map((sub, subIndex) => (
+                                                    <button
+                                                        key={subIndex}
+                                                        onClick={() => {
+                                                            setSelectedOptionIndex(index);
+                                                            setSelectedSubOption(sub);
+                                                            setUserInput("");
+                                                        }}
+                                                        className="flex items-center gap-2 text-gray-600 text-xs px-2 py-1 rounded hover:bg-gray-200 text-left w-full"
+                                                    >
+                                                        <IoMdCheckmark className="text-[#47735a]" />
+                                                        <span>{sub}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {/* Input if this card is selected */}
+                                            {selectedOptionIndex === index && selectedSubOption && (
+                                                <div className="mt-4">
+                                                    <input
+                                                        type="text"
+                                                        className="w-full px-2 py-1 text-black rounded mb-2"
+                                                        placeholder={`Enter ${selectedSubOption} query...`}
+                                                        value={userInput}
+                                                        onChange={(e) => setUserInput(e.target.value)}
+                                                    />
+                                                    <button
+                                                        onClick={() => startChat(`${selectedSubOption} ${userInput}`)}
+                                                        className="mt-1 bg-black text-white px-3 py-1 rounded hover:bg-gray-800 text-xs"
+                                                    >
+                                                        Submit
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    ))}
+                                </div>
+
+                            </div>
+                        )}
+
+                    </motion.div>
+                </div>
             </div>
         </div>
     );
