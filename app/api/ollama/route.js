@@ -4,7 +4,7 @@ export async function GET(req) {
     try {
         const ollama = new Ollama({
             model: "codeqwen",
-            baseUrl: "http://localhost:11434",
+            baseUrl: "http://127.0.0.1:11434",
         });
 
         const response = await ollama.invoke("Hello, world!");

@@ -19,7 +19,7 @@ export async function POST(req) {
         // Set up the AI model (Ollama) with specific configurations
         const model = new Ollama({
             model: "codeqwen",
-            baseUrl: "http://localhost:11434",
+            baseUrl: "http://127.0.0.1:11434",
             stream: true,
         });
 
