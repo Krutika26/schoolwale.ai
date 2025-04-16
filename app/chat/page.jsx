@@ -10,11 +10,14 @@ import { TbBulbFilled, TbTextGrammar } from "react-icons/tb";
 import { FaBookOpen } from "react-icons/fa";
 import { BiSolidPlanet } from "react-icons/bi";
 import { IoMdCheckmark } from "react-icons/io";
-import Navbar from "./components/Navbar";
 import { ChevronLeft, ChevronRight } from 'lucide-react'; // optional icons
 
 const icons = [<TbBulbFilled className="text-[#edb949]"/>, <FaBookOpen className="text-[#76b2a4]"/>, <TbTextGrammar className="text-[#346a7e]"/>, <BiSolidPlanet className="text-[#76b2a4]"/>];
 const colors = ['bg-[#fff7de]', 'bg-[#e9f5f1]', 'bg-[#c6e3dd]', 'bg-[#e9f5f1]'];
+
+import dynamic from "next/dynamic";
+
+const Navbar = dynamic(() => import("./components/Navbar"), { ssr: false });
 
 // Default chat options for quick start
 const defaultOptions = [
@@ -135,13 +138,10 @@ const ChatStream = () => {
             { type: "ai", content: "" },
         ]);
 
-        console.log(initialQuestion)
-
         const curriculumOptions = defaultOptions.find(option => option.title === "Curriculum Based Q&A")?.options;
 
         if (curriculumOptions && curriculumOptions.some(sub => initialQuestion.toLowerCase().includes(sub.toLowerCase()))) {
             // Do something if initialQuestion contains one of the options
-            console.log("Matched Curriculum Based Q&A");
             try {
                 const response = await fetch("/api/pdfiles", {
                     method: "GET",
@@ -154,9 +154,8 @@ const ChatStream = () => {
             
                 // Parse the full JSON array
                 const data = await response.json();
-            
-                // Extract and join all page contents
-                const fullText = data.map((page) => page.pageContent).join(" ").trim();
+                const fullText = data.chunks.map((chunk) => chunk.pageContent).join(" ").trim();
+                console.log(fullText)
             
                 // Update your messages state
                 setMessages((prev) => {
@@ -349,10 +348,10 @@ const ChatStream = () => {
                         transition={{ duration: 0.5 }}
                     >
                         {/* Display default options if chat hasn't started */}
-                        {!chatStarted && (
+                        {!chatStarted && !selectedSubOption && (
                             <div>
                                 <h2 className="text-gray-600 text-center mb-4">
-                                    What else we can help you with. Select from below icon
+                                    What else can we help you with? Select from below icon
                                 </h2>
                                 <div className="grid grid-cols-4 gap-10 mb-6">
                                     {defaultOptions.map((optionGroup, index) => (
@@ -360,7 +359,7 @@ const ChatStream = () => {
                                             key={index}
                                             whileHover={{ scale: 1.03 }}
                                             whileTap={{ scale: 0.98 }}
-                                            className={`h-auto min-h-60 w-56 p-4 ${colors[index]} text-gray-600 rounded-xl hover:brightness-110 transition-colors text-sm font-medium shadow-md flex flex-col justify-start text-center`}
+                                            className={`h-auto min-h-60 w-56 p-4 ${colors[index]} text-gray-600 rounded-xl transition-colors text-sm font-medium shadow-md flex flex-col justify-start text-center`}
                                         >
                                             <div className="text-3xl mb-2 flex justify-center">{icons[index]}</div>
                                             <div className="text-base font-semibold mb-3">{optionGroup.title}</div>
@@ -375,39 +374,57 @@ const ChatStream = () => {
                                                             setSelectedSubOption(sub);
                                                             setUserInput("");
                                                         }}
-                                                        className="flex items-center gap-2 text-gray-600 text-xs px-2 py-1 rounded hover:bg-gray-200 text-left w-full"
+                                                        className="flex items-center gap-2 text-gray-600 text-xs px-2 py-1 rounded hover:bg-gray-200 hover:brightness-110 text-left w-full"
                                                     >
                                                         <IoMdCheckmark className="text-[#47735a]" />
-                                                        <span>{sub}</span>
+                                                        <span className="rounded-lg bg-white p-2">{sub}</span>
                                                     </button>
                                                 ))}
                                             </div>
-
-                                            {/* Input if this card is selected */}
-                                            {selectedOptionIndex === index && selectedSubOption && (
-                                                <div className="mt-4">
-                                                    <input
-                                                        type="text"
-                                                        className="w-full px-2 py-1 text-black rounded mb-2"
-                                                        placeholder={`Enter ${selectedSubOption} query...`}
-                                                        value={userInput}
-                                                        onChange={(e) => setUserInput(e.target.value)}
-                                                    />
-                                                    <button
-                                                        onClick={() => startChat(`${selectedSubOption} ${userInput}`)}
-                                                        className="mt-1 bg-black text-white px-3 py-1 rounded hover:bg-gray-800 text-xs"
-                                                    >
-                                                        Submit
-                                                    </button>
-                                                </div>
-                                            )}
                                         </motion.div>
                                     ))}
                                 </div>
-
                             </div>
                         )}
 
+                        {/* Input area only for the selected sub-option */}
+                        {selectedSubOption && !chatStarted && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                                <div className="bg-white w-1/2 h-1/2 rounded-lg shadow-lg flex flex-col justify-center items-center p-6">
+                                    <h2 className="text-md font-semibold mb-4 text-center">
+                                        Ask a query about <span className="text-blue-600">{selectedSubOption}</span>
+                                    </h2>
+                                    <textarea
+                                        rows={1}
+                                        className="w-full px-4 py-2 text-lg text-black border border-gray-300 rounded mb-4 resize-none overflow-auto placeholder:text-xl placeholder:leading-8 max-h-40"
+                                        placeholder={`Enter ${selectedSubOption} query...`}
+                                        value={userInput}
+                                        onChange={(e) => {
+                                            setUserInput(e.target.value);
+                                            e.target.style.height = 'auto'; // reset height
+                                            e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`; // grow until 160px (max-h-40)
+                                        }}
+                                    />
+                                    <div className="flex space-x-4">
+                                        <button
+                                            onClick={() => startChat(`${selectedSubOption} ${userInput}`)}
+                                            className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-sm"
+                                        >
+                                            Submit
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedSubOption(null);
+                                                setUserInput('');
+                                            }}
+                                            className="bg-gray-300 text-black px-6 py-2 rounded hover:bg-gray-400 text-sm"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
                 </div>
             </div>

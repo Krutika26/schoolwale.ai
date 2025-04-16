@@ -1,21 +1,26 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import SignUpLoginPopup from "./SignUpLoginPopup";
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const handleToggleModal = () => setIsModalOpen(!isModalOpen);
 
+  if (!hasMounted) return null; // avoids mismatch
+
   return (
     <nav className="w-full px-6 py-4 bg-white shadow-md flex items-center justify-between sticky top-0 z-50">
-      {/* Logo */}
       <div className="flex items-center space-x-2 text-[#4a7f85] font-bold text-xl">
         <span>SchoolWale.ai</span>
       </div>
 
-      {/* Login/Signup Button */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -25,7 +30,6 @@ const Navbar = () => {
         Login / Sign Up
       </motion.button>
 
-      {/* Signup/Login Modal */}
       <SignUpLoginPopup isOpen={isModalOpen} onClose={handleToggleModal} />
     </nav>
   );
