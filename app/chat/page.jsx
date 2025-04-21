@@ -265,7 +265,7 @@ const ChatStream = () => {
                 {/* Toggle Button - absolutely positioned outside the sidebar */}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className={`absolute top-20 transition-all duration-300 ${isCollapsed ? 'left-2' : 'left-[20%]' // adjust left value based on sidebar width
+                    className={`absolute top-40 transition-all duration-300 ${isCollapsed ? 'left-2' : 'left-[20%]' // adjust left value based on sidebar width
                         } p-1 bg-white rounded-full shadow z-50`}
                 >
                     {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
