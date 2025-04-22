@@ -22,6 +22,7 @@ export async function POST(req) {
             baseUrl: "http://127.0.0.1:11434",
             stream: true,
         });
+        console.log(question)
 
         // Add the user's question to the chat history
         await mainChatMessageHistory.addMessage(new HumanMessage(question));

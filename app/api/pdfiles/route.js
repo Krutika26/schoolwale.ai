@@ -42,7 +42,7 @@ export async function POST(req) {
           values: Array.from(embeddingTensor.data),
           metadata: {
             text: doc.pageContent,
-            source: doc.metadata?.source || file.name,
+            source: file.name,
           },
         };
       })
@@ -56,6 +56,7 @@ export async function POST(req) {
       topK: 1,
       includeMetadata: true,
     });
+    console.log("Sources found:", queryResults.matches.map(m => m.metadata?.source));
 
     const similarScore = queryResults.matches?.[0]?.score || 0;
 

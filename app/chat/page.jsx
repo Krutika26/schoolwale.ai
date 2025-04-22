@@ -40,6 +40,31 @@ const defaultOptions = [
     },
   ];  
 
+const uploadOptions = [
+    {
+        title: "Explain data"
+    },
+    {
+        title: "Summarize data"
+    },
+    {
+        title: "Analyze data"
+    }
+]
+
+const uploadOptions2 = [
+    {
+        title: "Solve the Attached",
+        bgColor: "bg-[#468081]",
+        hoverColor: "hover:bg-[#468081]-600"
+    },
+    {
+        title: "Verify My Answer",
+        bgColor: "bg-[#eb9b80]",
+        hoverColor: "hover:bg-[#eb9b80]-600"
+    }
+];  
+
 // Markdown component to render formatted text
 const Markdown = ({ content }) => {
     // Process the content to handle special cases and formatting
@@ -140,109 +165,96 @@ const ChatStream = () => {
         ]);
 
         const curriculumOptions = defaultOptions.find(option => option.title === "Curriculum Based Q&A")?.options;
+        const isUploadOption = uploadOptions.some(option => option.title === initialQuestion);
+        const isUploadOption2 = uploadOptions2.some(option => option.title === initialQuestion);
 
-        if (curriculumOptions && curriculumOptions.some(sub => initialQuestion.toLowerCase().includes(sub.toLowerCase()))) {
+        if (curriculumOptions || isUploadOption || isUploadOption2) {
             // Do something if initialQuestion contains one of the options
             try {
-                const response = await fetch("/api/pdfiles", {
-                    method: "GET",
-                    headers: { "Content-Type": "application/json" },
-                });
-            
+                const pdfName = "Krutika_Shahane.pdf";
+
+                const response = await fetch(`/api/pdfetch?source=${encodeURIComponent(pdfName)}`);
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            
-                // Parse the full JSON array
                 const data = await response.json();
-                const fullText = data.chunks.map((chunk) => chunk.pageContent).join(" ").trim();
-                console.log(fullText)
-            
-                // Update your messages state
-                setMessages((prev) => {
-                    const newMessages = [...prev];
-                    const lastMessage = newMessages[newMessages.length - 1];
-            
-                    if (lastMessage?.type === "ai") {
-                        lastMessage.content = (lastMessage.content + " " + fullText).trim();
-                    } else {
-                        // If there's no AI message yet, you can also choose to push one
-                        newMessages.push({
-                            type: "ai",
-                            content: fullText,
-                        });
-                    }
-            
-                    return newMessages;
-                });
+                const fullText = data.results.map((chunk) => chunk.text).join(" ").trim();
+
+                initialQuestion = initialQuestion+ " " +fullText;
             } catch (error) {
                 console.error("Error fetching and processing PDF data:", error);
             }            
-        }else{
-            try {
-                // Send request to chat API
-                const response = await fetch("/api/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ question: initialQuestion }),
-                });
-    
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-    
-                // Handle the streaming response
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-    
-                let lastWord = "";
-    
-                // Read the stream chunk by chunk
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-    
-                    const chunk = decoder.decode(value);
-                    const {
-                        text,
-                        lastWord: newLastWord,
-                        isLast,
-                    } = JSON.parse(chunk);
-    
-                    // Update messages with new content
-                    setMessages((prev) => {
-                        const newMessages = [...prev];
-                        const lastMessage = newMessages[newMessages.length - 1];
-                        if (lastMessage.type === "ai") {
-                            // Remove the last word if it's duplicated
-                            const content = lastMessage.content.endsWith(lastWord)
-                                ? lastMessage.content
-                                      .slice(0, -lastWord.length)
-                                      .trim()
-                                : lastMessage.content;
-    
-                            lastMessage.content =
-                                content + (content ? " " : "") + text;
-                        }
-                        return newMessages;
-                    });
-    
-                    lastWord = newLastWord;
-    
-                    if (isLast) break;
-                }
-            } catch (error) {
-                // Handle errors
-                console.error("Error in chat:", error);
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        type: "error",
-                        content: "An error occurred while processing your request.",
-                    },
-                ]);
-            }
         }
+        try {
+            // Send request to chat AP
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question: initialQuestion }),
+            });
+        
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        
+            // Handle the streaming response
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+        
+            let lastWord = "";
+        
+            // Read the stream chunk by chunk
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+        
+                const chunk = decoder.decode(value, { stream: true });
+        
+                // Handle potential multiple JSON objects in the chunk
+                const lines = chunk.split('\n').filter((line) => line.trim().startsWith('{') && line.trim().endsWith('}'));
+        
+                for (const line of lines) {
+                    try {
+                        const { text, lastWord: newLastWord, isLast } = JSON.parse(line);
+        
+                        // Update messages with new content
+                        setMessages((prev) => {
+                            const newMessages = [...prev];
+                            const lastMessage = newMessages[newMessages.length - 1];
+                            if (lastMessage.type === "ai") {
+                                // Remove the last word if it's duplicated
+                                const content = lastMessage.content.endsWith(lastWord)
+                                    ? lastMessage.content.slice(0, -lastWord.length).trim()
+                                    : lastMessage.content;
+        
+                                lastMessage.content =
+                                    content + (content ? " " : "") + text;
+                            }
+                            return newMessages;
+                        });
+        
+                        lastWord = newLastWord;
+        
+                        if (isLast) break;
+                    } catch (err) {
+                        // Log JSON parse errors but don't crash the stream
+                        console.error("JSON parse error for line:", line, err);
+                    }
+                }
+            }
+        } catch (error) {
+            // Handle fetch, stream, or unexpected errors
+            console.error("Error in chat:", error);
+        
+            setMessages((prev) => [
+                ...prev,
+                {
+                    type: "error",
+                    content: `An error occurred while processing your request: ${error.message}`,
+                },
+            ]);
+        }        
     };
 
     // Render the chat interface
@@ -325,7 +337,53 @@ const ChatStream = () => {
                     </div>
                     {/* Upload Section */}
                     <div className="mb-4">
-                        <DocumentUpload></DocumentUpload>
+                        {!chatStarted && !selectedSubOption && (
+                            <div>
+                                <DocumentUpload></DocumentUpload>
+                                {/* Task Options */}
+                                <div className="mt-4 text-center">
+                                    <p className="text-gray-600 mb-3">
+                                        What do you want to do with uploaded data:
+                                    </p>
+
+                                    {/* Top 3 Action Buttons */}
+                                    <div className="flex justify-between gap-2">
+                                        {uploadOptions.map((option, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => {
+                                                    setSelectedOptionIndex(index);
+                                                    startChat(option.title);
+                                                    setUserInput("");
+                                                }} className="bg-[#ebf6f2] text-[#435e65] px-4 py-2 rounded-lg w-1/3">
+                                                {option.title}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Solve & Verify Buttons */}
+                                    <div className="flex justify-center gap-4 mt-5 bg-[#d2e7e2]">
+                                        {uploadOptions2.map((option, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => {
+                                                    setSelectedOptionIndex(index); // make sure `index` is defined in your scope
+                                                    startChat(option.title);
+                                                    setUserInput("");
+                                                }}
+                                                className={`${option.bgColor} ${option.hoverColor} text-white px-5 py-2 rounded-t-xl shadow w-1/3 mt-5`}
+                                            >
+                                                {option.title}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {/* Hint */}
+                                    <p className="text-gray-500 text-sm mt-2 italic">
+                                        Works for all the subjects and classes.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                     {/* Chat input form */}
                     <form onSubmit={handleSubmit} className="flex items-center">
