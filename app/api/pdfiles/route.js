@@ -1,76 +1,26 @@
-// import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-// import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-// import { pinecone } from "../../../lib/pinecone-client";
-// import { pipeline } from "@xenova/transformers";
-
-// function generateChunkIds(count) {
-//   return Array.from({ length: count }, (_, i) => `doc-chunk-${i}`);
-// }
-
-// export async function GET(req) {
-//   try {
-//     const loader = new PDFLoader("public/nike.pdf");
-//     const docs = await loader.load();
-
-//     const splitter = new RecursiveCharacterTextSplitter({
-//       chunkSize: 1000,
-//       chunkOverlap: 200,
-//     });
-//     const splits = await splitter.splitDocuments(docs);
-
-//     const embedder = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
-
-//     const vectors = await Promise.all(
-//       splits.map(async (doc, i) => {
-//         const embeddingTensor = await embedder(doc.pageContent, {
-//           pooling: "mean",
-//           normalize: true,
-//         });
-//         return {
-//           id: `doc-chunk-${i}`,
-//           values: Array.from(embeddingTensor.data),
-//           metadata: {
-//             text: doc.pageContent,
-//             source: doc.metadata?.source || "nike.pdf",
-//           },
-//         };
-//       })
-//     );
-
-//     const index = pinecone.Index(process.env.PINECONE_INDEX);
-//     await index.upsert(vectors, {
-//       namespace: "pdf-docs",
-//     });    
-
-//     return Response.json({
-//       message: "PDF indexed successfully",
-//       chunksIndexed: vectors.length,
-//       chunks: splits.map((doc, i) => ({
-//         id: `doc-chunk-${i}`,
-//         pageContent: doc.pageContent,
-//         metadata: {
-//           source: doc.metadata?.source || "nike.pdf",
-//         },
-//       })),
-//     });
-//   } catch (error) {
-//     console.error("ERROR while indexing PDF:", error);
-//     return Response.json({ error: error.message }, { status: 500 });
-//   }
-// }
-
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { pinecone } from "../../../lib/pinecone-client";
+import { pinecone } from "../../../lib/pinecone-client"; // Adjust path if needed
 import { pipeline } from "@xenova/transformers";
+import { writeFile } from "fs/promises";
+import path from "path";
+import { tmpdir } from "os";
+import { randomUUID } from "crypto";
 
-function generateChunkIds(count) {
-  return Array.from({ length: count }, (_, i) => `doc-chunk-${i}`);
-}
-
-export async function GET(req) {
+export async function POST(req) {
   try {
-    const loader = new PDFLoader("public/nike.pdf");
+    const formData = await req.formData();
+    const file = formData.get("file");
+
+    if (!file) {
+      return new Response(JSON.stringify({ error: "No file uploaded" }), { status: 400 });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const tempFilePath = path.join(tmpdir(), `${randomUUID()}-${file.name}`);
+    await writeFile(tempFilePath, buffer);
+
+    const loader = new PDFLoader(tempFilePath);
     const docs = await loader.load();
 
     const splitter = new RecursiveCharacterTextSplitter({
@@ -88,11 +38,11 @@ export async function GET(req) {
           normalize: true,
         });
         return {
-          id: `doc-chunk-${i}`,
+          id: `doc-chunk-${i}-${randomUUID()}`, // Ensures uniqueness
           values: Array.from(embeddingTensor.data),
           metadata: {
             text: doc.pageContent,
-            source: doc.metadata?.source || "nike.pdf",
+            source: doc.metadata?.source || file.name,
           },
         };
       })
@@ -100,41 +50,31 @@ export async function GET(req) {
 
     const index = pinecone.Index(process.env.PINECONE_INDEX);
 
-    // Check if vectors already exist by querying the vector IDs
-    const ids = vectors.map((vector) => vector.id);
+    // Optional: check if content exists (basic check via score similarity)
     const queryResults = await index.query({
-      vector: vectors[0].values,  // Query the first vector as a representative one
-      topK: 1,  // Retrieve the most similar match
-      includeMetadata: true,  // To retrieve metadata if necessary
+      vector: vectors[0].values,
+      topK: 1,
+      includeMetadata: true,
     });
 
-    // Check if any of the vectors already exist
-    const existingIds = queryResults.matches.map((match) => match.id);
-    const newVectors = vectors.filter((vector) => !existingIds.includes(vector.id));
+    const similarScore = queryResults.matches?.[0]?.score || 0;
 
-    if (queryResults.matches && queryResults.matches[0]?.score > 0.95) {
-      console.log("PDF already indexed. Skipping upload.")
-    }    
-
-    if (newVectors.length > 0) {
-      await index.upsert(newVectors, {
-        namespace: "pdf-docs",
-      });
+    if (similarScore > 0.95) {
+      console.log("PDF already indexed. Skipping upload.");
+    } else {
+      const upsertResponse = await index.upsert(vectors, "pdf-docs");
+      console.log("Upsert response:", upsertResponse);
     }
 
-    return Response.json({
-      message: "PDF indexed successfully",
-      chunksIndexed: newVectors.length,
-      chunks: splits.map((doc, i) => ({
-        id: `doc-chunk-${i}`,
-        pageContent: doc.pageContent,
-        metadata: {
-          source: doc.metadata?.source || "nike.pdf",
-        },
-      })),
-    });
+    return new Response(
+      JSON.stringify({
+        message: "PDF indexed successfully",
+        chunksIndexed: vectors.length,
+      }),
+      { status: 200 }
+    );
   } catch (error) {
     console.error("ERROR while indexing PDF:", error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }

@@ -11,6 +11,7 @@ import { FaBookOpen } from "react-icons/fa";
 import { BiSolidPlanet } from "react-icons/bi";
 import { IoMdCheckmark } from "react-icons/io";
 import { ChevronLeft, ChevronRight } from 'lucide-react'; // optional icons
+import DocumentUpload from "./components/DocumentUpload";
 
 const icons = [<TbBulbFilled className="text-[#edb949]"/>, <FaBookOpen className="text-[#76b2a4]"/>, <TbTextGrammar className="text-[#346a7e]"/>, <BiSolidPlanet className="text-[#76b2a4]"/>];
 const colors = ['bg-[#fff7de]', 'bg-[#e9f5f1]', 'bg-[#c6e3dd]', 'bg-[#e9f5f1]'];
@@ -321,6 +322,10 @@ const ChatStream = () => {
                                 </motion.div>
                             ))}
                         </AnimatePresence>
+                    </div>
+                    {/* Upload Section */}
+                    <div className="mb-4">
+                        <DocumentUpload></DocumentUpload>
                     </div>
                     {/* Chat input form */}
                     <form onSubmit={handleSubmit} className="flex items-center">
