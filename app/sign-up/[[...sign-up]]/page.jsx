@@ -34,14 +34,14 @@ export default function SignUpPage() {
         console.log(res)
   
         if (res.ok) {
-          console.log("✅ User saved");
+          console.log("User saved");
           router.push("/chat")
         } else {
           const err = await res.json();
-          console.error("❌ Save error:", err);
+          console.error("Save error:", err);
         }
       } catch (err) {
-        console.error("❌ API call failed:", err);
+        console.error("API call failed:", err);
       }
     };
   

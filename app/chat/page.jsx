@@ -12,6 +12,7 @@ import { BiSolidPlanet } from "react-icons/bi";
 import { IoMdCheckmark } from "react-icons/io";
 import { ChevronLeft, ChevronRight } from 'lucide-react'; // optional icons
 import DocumentUpload from "./components/DocumentUpload";
+import { setSessionStartTime } from "../../lib/sessionTracker";
 
 const icons = [<TbBulbFilled className="text-[#edb949]"/>, <FaBookOpen className="text-[#76b2a4]"/>, <TbTextGrammar className="text-[#346a7e]"/>, <BiSolidPlanet className="text-[#76b2a4]"/>];
 const colors = ['bg-[#fff7de]', 'bg-[#e9f5f1]', 'bg-[#c6e3dd]', 'bg-[#e9f5f1]'];
@@ -149,6 +150,7 @@ const ChatStream = () => {
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSessionStartTime();
         await startChat(question);
     };
 
@@ -164,11 +166,23 @@ const ChatStream = () => {
             { type: "ai", content: "" },
         ]);
 
-        const curriculumOptions = defaultOptions.find(option => option.title === "Curriculum Based Q&A")?.options;
-        const isUploadOption = uploadOptions.some(option => option.title === initialQuestion);
-        const isUploadOption2 = uploadOptions2.some(option => option.title === initialQuestion);
+        const allOptions = [...uploadOptions, ...uploadOptions2];
+        const isInOptions = allOptions.some(option => option.title === initialQuestion);
+        const curriculumOptions = defaultOptions.find(
+            item => item.title === "Curriculum Based Q&A"
+        )?.options || [];
 
-        if (curriculumOptions || isUploadOption || isUploadOption2) {
+        const normalize = str => str.toLowerCase().replace(/\s+/g, ''); // remove spaces, lowercase
+
+        const normalizedQuestion = normalize(initialQuestion);
+
+        const isCurriculumBased = curriculumOptions.some(option =>
+            normalizedQuestion.includes(normalize(option))
+        );
+
+        console.log(isCurriculumBased, isInOptions);
+
+        if (isCurriculumBased || isInOptions) {
             // Do something if initialQuestion contains one of the options
             try {
                 const pdfName = "Krutika_Shahane.pdf";
@@ -449,9 +463,9 @@ const ChatStream = () => {
                                 </div>
                             </div>
                         )}
-
-                        {/* Input area only for the selected sub-option */}
-                        {selectedSubOption && !chatStarted && (
+                    </motion.div>
+                    {/* Input area only for the selected sub-option */}
+                    {selectedSubOption && !chatStarted && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
                                 <div className="bg-white w-1/2 h-1/2 rounded-lg shadow-lg flex flex-col justify-center items-center p-6">
                                     <h2 className="text-md font-semibold mb-4 text-center">
@@ -488,7 +502,6 @@ const ChatStream = () => {
                                 </div>
                             </div>
                         )}
-                    </motion.div>
                 </div>
             </div>
         </div>

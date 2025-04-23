@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { getSessionTimes } from '../../lib/sessionTracker';
 
 const ChatStream = dynamic(() => import('../chat/page'));
+console.log("session time:" , getSessionTimes());
 
 export default function Home() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -34,7 +36,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+    <main>
       {authStatus === 'logged-in' && <ChatStream />}
     </main>
   );

@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto">{children}</main>
+            <main>{children}</main>
           </ThemeProvider>
         </body>
       </html>

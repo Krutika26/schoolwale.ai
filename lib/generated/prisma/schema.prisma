@@ -9,24 +9,12 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String        @id @default(uuid())
   username  String
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  auth     Auth?
-  sessions ChatSession[]
-}
-
-model Auth {
-  id           String    @id @default(uuid())
-  userId       String    @unique
-  passwordHash String
-  lastLogin    DateTime?
-  isActive     Boolean   @default(true)
-
-  user User @relation(fields: [userId], references: [id])
+  email     String        @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  sessions  ChatSession[]
 }
 
 model ChatSession {
