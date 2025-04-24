@@ -147,10 +147,15 @@ const ChatStream = () => {
         }
     }, [messages]);
 
+    useEffect(() => {
+        if (chatStarted) {
+          setSessionStartTime();
+        }
+      }, [chatStarted]);
+
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSessionStartTime();
         await startChat(question);
     };
 

@@ -1,17 +1,18 @@
 // lib/sessionTracker.ts
 
-let sessionStartTime: string | null = null;
-let sessionEndTime: string | null = null;
-
 export const setSessionStartTime = () => {
-  sessionStartTime = new Date().toISOString();
+  const time = new Date().toISOString();
+  localStorage.setItem("sessionStartTime", time);
 };
 
 export const setSessionEndTime = () => {
-  sessionEndTime = new Date().toISOString();
+  const time = new Date().toISOString();
+  localStorage.setItem("sessionEndTime", time);
 };
 
-export const getSessionTimes = () => ({
-  start: sessionStartTime,
-  end: sessionEndTime,
-});
+export const getSessionTimes = () => {
+  return {
+    start: localStorage.getItem("sessionStartTime"),
+    end: localStorage.getItem("sessionEndTime"),
+  };
+};

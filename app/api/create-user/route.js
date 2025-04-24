@@ -25,6 +25,11 @@ export async function POST(req) {
           username,
         },
       });
+      await prisma.chatSession.create({
+        data: {
+          userId:id,
+        },
+      });
       console.log("User created in database.");
     } else {
       console.log("User already exists.");
