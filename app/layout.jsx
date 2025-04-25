@@ -22,7 +22,12 @@ export default function RootLayout({ children }) {
             </header>
 
             {/* Main Content */}
-            <main>{children}</main>
+            <main className="flex-grow">{children}</main>
+
+            {/* Footer */}
+            <footer className="bg-gray-100 dark:bg-gray-900 text-center p-4">
+              <div>Footer for social media apps</div>
+            </footer>
           </ThemeProvider>
         </body>
       </html>

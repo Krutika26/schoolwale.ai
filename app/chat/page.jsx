@@ -12,7 +12,8 @@ import { BiSolidPlanet } from "react-icons/bi";
 import { IoMdCheckmark } from "react-icons/io";
 import { ChevronLeft, ChevronRight } from 'lucide-react'; // optional icons
 import DocumentUpload from "./components/DocumentUpload";
-import { setSessionStartTime } from "../../lib/sessionTracker";
+import { useUser, useSession } from "@clerk/nextjs";
+import ChatHistory  from "./components/ChatHistory"
 
 const icons = [<TbBulbFilled className="text-[#edb949]"/>, <FaBookOpen className="text-[#76b2a4]"/>, <TbTextGrammar className="text-[#346a7e]"/>, <BiSolidPlanet className="text-[#76b2a4]"/>];
 const colors = ['bg-[#fff7de]', 'bg-[#e9f5f1]', 'bg-[#c6e3dd]', 'bg-[#e9f5f1]'];
@@ -138,6 +139,8 @@ const ChatStream = () => {
     const [chatStarted, setChatStarted] = useState(false);
     const chatContainerRef = useRef(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const { session } = useSession();
+    const { user } = useUser();
 
     // Scroll to bottom of chat when new messages are added
     useEffect(() => {
@@ -146,12 +149,6 @@ const ChatStream = () => {
                 chatContainerRef.current.scrollHeight;
         }
     }, [messages]);
-
-    useEffect(() => {
-        if (chatStarted) {
-          setSessionStartTime();
-        }
-      }, [chatStarted]);
 
     // Handle form submission
     const handleSubmit = async (e) => {
@@ -210,7 +207,11 @@ const ChatStream = () => {
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ question: initialQuestion }),
+                body: JSON.stringify({ 
+                    question: initialQuestion,
+                    sender: user.id,
+                    session
+                 }),
             });
         
             if (!response.ok) {
@@ -289,7 +290,7 @@ const ChatStream = () => {
                     {/* Show title only when expanded */}
                     {!isCollapsed && (
                         <>
-                            <h1 className="text-xl font-semibold">History</h1>
+                            <ChatHistory></ChatHistory>
                         </>
                     )}
                 </div>

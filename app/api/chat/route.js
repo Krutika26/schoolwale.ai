@@ -5,17 +5,19 @@ import { ChatMessageHistory } from "langchain/stores/message/in_memory";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Ollama } from "@langchain/ollama";
+import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
 // Create a chat history to store messages
 const mainChatMessageHistory = new ChatMessageHistory();
 
 // Define the main function that handles POST requests
 
 export async function POST(req) {
+    const body = await req.json();
+    const { sender, session, question} = body;
+    console.log(session)
     try {
-        // Get the user's question from the request
-
-        const { question } = await req.json();
         // Set up the AI model (Ollama) with specific configurations
         const model = new Ollama({
             model: "codeqwen",
@@ -77,8 +79,27 @@ export async function POST(req) {
                 controller.close();
             },
         });
+        //convert chat istory to text
+        const chatHistoryString = mainChatMessageHistory.messages
+            .map((message) => message.text)
+            .join("\n");
+        //add chat to prisma db
+        await prisma.chatSession.create({
+            data: {
+              id: session.id,
+              userId: sender,
+              startedAt: session.createdAt,
+              endedAt: session.expireAt
+            },
+          });
+        await prisma.chatMessage.create({
+            data: {
+                sessionId: session.id, // Ensure sessionId is a string
+                sender: String(sender),
+                messageText: chatHistoryString,
+            } 
+         })
         // Return the stream as the response
-
         return new Response(stream, {
             headers: { "Content-Type": "application/json" },
         });

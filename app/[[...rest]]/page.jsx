@@ -1,85 +1,51 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { getSessionTimes } from '../../lib/sessionTracker';
-
-const ChatStream = dynamic(() => import('../chat/page'));
+import Link from 'next/link';
 
 export default function Home() {
-  const { isSignedIn, isLoaded, user } = useUser();
   const router = useRouter();
-  const [authStatus, setAuthStatus] = useState('checking');
-  const [sessionTimes, setSessionTimes] = useState({ start: null, end: null });
-
-  useEffect(() => {
-    const times = getSessionTimes();
-    console.log("Session started at:", times.start);
-    console.log("Session ended at:", times.end);
-    setSessionTimes(times);  // << save to state
-  }, []);
-  
-  useEffect(() => {
-    if (!isLoaded) return; // 👈 wait for Clerk to be ready
-    if (!isSignedIn || !user) return;
-
-    const createSession = async () => {
-      if (!sessionTimes.start || !sessionTimes.end) {
-        console.log("Session times are not ready yet.");
-        return;
-      }
-
-      try {
-        const res = await fetch("/api/end-session", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            endedAt: sessionTimes.end
-          }),
-        });
-
-        if (res.ok) {
-          console.log("Session saved");
-          router.push("/sign-in");
-        } else {
-          const err = await res.json();
-          console.error("Save error:", err);
-        }
-      } catch (err) {
-        console.error("API call failed:", err);
-      }
-    };
-
-    createSession();
-  }, [sessionTimes]);  // << depends on sessionTimes
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    if (isSignedIn && user) {
-      const isNewUser = user.publicMetadata?.isNewUser === true;
-      if (isNewUser) {
-        router.replace('/sign-in'); 
-      } else {
-        setAuthStatus('logged-in');
-      }
-    } else {
-      router.replace('/sign-up'); 
-    }
-  }, [isLoaded, isSignedIn, user, router]);
-
-  if (authStatus === 'checking') {
-    return <main className="flex min-h-screen items-center justify-center p-24">Loading...</main>;
-  }
-
   return (
-    <main>
-      {authStatus === 'logged-in' && <ChatStream />}
+    <main className="relative flex flex-col min-h-screen">
+      {/* Navbar */}
+      <nav className="absolute top-0 left-0 right-0 z-20 flex items-center bg-transparent text-white px-6 py-4">
+        <div className="flex gap-4 items-center ml-auto">
+          <Link href="/chat" className="hover:underline">Chat</Link>
+          <button 
+            className="px-4 py-2 rounded"
+            onClick={() => router.push('/sign-in')}
+          >
+            Sign In
+          </button>
+          <button 
+            className="px-4 py-2 rounded"
+            onClick={() => router.push('/sign-up')}
+          >
+            Sign Up
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <section className="relative flex-grow">
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          className="absolute inset-0 w-full h-[100vh] object-cover"
+        >
+          <source src="/159053-818026314_small.mp4" type="video/mp4" />
+        </video>
+
+        <div className="relative z-10 text-center text-white py-20">
+          <h1 className="text-4xl font-bold mb-4">Welcome to Our AI Educational Chatbot</h1>
+          <p className="text-xl max-w-2xl mx-auto">
+            Our AI-powered educational chatbot is designed to assist students with personalized learning experiences.
+            Whether you need help with specific subjects or simply want to explore new topics, our chatbot offers
+            interactive Q&A, resources, and guidance on-demand.
+          </p>
+        </div>
+      </section>
     </main>
   );
 }

@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 export async function POST(req) {
   const body = await req.json();
-  const { id, email, username } = body;
+  const { id, email, username} = body;
 
   console.log("Incoming user:", { id, email, username });
 
@@ -23,11 +23,6 @@ export async function POST(req) {
           id,
           email,
           username,
-        },
-      });
-      await prisma.chatSession.create({
-        data: {
-          userId:id,
         },
       });
       console.log("User created in database.");

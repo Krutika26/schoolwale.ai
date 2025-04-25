@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { FiLogOut } from "react-icons/fi";
 import { FaCircleInfo } from "react-icons/fa6";
 import { useClerk } from '@clerk/clerk-react'; // Import Clerk hook
-import { setSessionEndTime } from "../../../lib/sessionTracker"
 
 const Navbar = () => {
   const [hasMounted, setHasMounted] = useState(false);
@@ -16,10 +15,8 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     try {
-      setSessionEndTime();
       await signOut(); // This will sign the user out
       // Optionally redirect to a login or home page
-      window.location.href = "/sign-in"; // or use a router for navigation
     } catch (error) {
       console.error("Error signing out:", error);
     }
