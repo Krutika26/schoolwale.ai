@@ -1,4 +1,3 @@
-// app/api/chatHistory/route.js
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -21,14 +20,8 @@ export async function GET(req) {
       previousMonths.push(previousMonth);
     }
 
-    // Fetch messages for different date ranges
-    const messages = await prisma.chatMessage.findMany({
-      where: {
-        sentAt: {
-          gte: last30Days, // Fetch messages from the last 30 days
-        },
-      },
-    });
+    // Fetch all messages (remove the date filter)
+    const messages = await prisma.chatMessage.findMany();
 
     return new Response(JSON.stringify({ messages }), { status: 200 });
   } catch (error) {

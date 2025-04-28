@@ -14,12 +14,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'; // optional icons
 import DocumentUpload from "./components/DocumentUpload";
 import { useUser, useSession } from "@clerk/nextjs";
 import ChatHistory  from "./components/ChatHistory"
+import dynamic from "next/dynamic";
 
 const icons = [<TbBulbFilled className="text-[#edb949]"/>, <FaBookOpen className="text-[#76b2a4]"/>, <TbTextGrammar className="text-[#346a7e]"/>, <BiSolidPlanet className="text-[#76b2a4]"/>];
 const colors = ['bg-[#fff7de]', 'bg-[#e9f5f1]', 'bg-[#c6e3dd]', 'bg-[#e9f5f1]'];
-
-import dynamic from "next/dynamic";
-
 const Navbar = dynamic(() => import("./components/Navbar"), { ssr: false });
 
 // Default chat options for quick start
@@ -130,6 +128,8 @@ const Markdown = ({ content }) => {
 // Main ChatStream component
 const ChatStream = () => {
     // State variables for managing chat
+    const { session, isLoaded: sessionLoaded } = useSession();
+    const { user, isLoaded: userLoaded } = useUser();
 
     const [selectedOptionIndex, setSelectedOptionIndex] = useState(null);
     const [selectedSubOption, setSelectedSubOption] = useState("");
@@ -139,8 +139,6 @@ const ChatStream = () => {
     const [chatStarted, setChatStarted] = useState(false);
     const chatContainerRef = useRef(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const { session } = useSession();
-    const { user } = useUser();
 
     // Scroll to bottom of chat when new messages are added
     useEffect(() => {
@@ -158,6 +156,10 @@ const ChatStream = () => {
 
     // Start or continue the chat
     const startChat = async (initialQuestion) => {
+        if (!user || !session) {
+            console.error("User or session not ready yet.");
+            return; // Don't start chat if auth info is missing
+        }
         // Update state and prepare for chat
         setChatStarted(true);
         setQuestion("");
@@ -204,65 +206,66 @@ const ChatStream = () => {
         }
         try {
             // Send request to chat AP
+            console.log(user);
+            console.log(session)
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
-                    question: initialQuestion,
-                    sender: user.id,
-                    session
-                 }),
-            });
-        
-            if (!response.ok) {
+                  question: initialQuestion,
+                  sender: user?.id,
+                  session: session
+                }),
+              });
+              
+              if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
-            }
-        
-            // Handle the streaming response
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-        
-            let lastWord = "";
-        
-            // Read the stream chunk by chunk
-            while (true) {
+              }
+              
+              // Handle the streaming response
+              const reader = response.body.getReader();
+              const decoder = new TextDecoder();
+              
+              let lastWord = "";
+              
+              // Read the stream chunk by chunk
+              while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-        
+              
                 const chunk = decoder.decode(value, { stream: true });
-        
+              
                 // Handle potential multiple JSON objects in the chunk
                 const lines = chunk.split('\n').filter((line) => line.trim().startsWith('{') && line.trim().endsWith('}'));
-        
+              
                 for (const line of lines) {
-                    try {
-                        const { text, lastWord: newLastWord, isLast } = JSON.parse(line);
-        
-                        // Update messages with new content
-                        setMessages((prev) => {
-                            const newMessages = [...prev];
-                            const lastMessage = newMessages[newMessages.length - 1];
-                            if (lastMessage.type === "ai") {
-                                // Remove the last word if it's duplicated
-                                const content = lastMessage.content.endsWith(lastWord)
-                                    ? lastMessage.content.slice(0, -lastWord.length).trim()
-                                    : lastMessage.content;
-        
-                                lastMessage.content =
-                                    content + (content ? " " : "") + text;
-                            }
-                            return newMessages;
-                        });
-        
-                        lastWord = newLastWord;
-        
-                        if (isLast) break;
-                    } catch (err) {
-                        // Log JSON parse errors but don't crash the stream
-                        console.error("JSON parse error for line:", line, err);
-                    }
+                  try {
+                    const { text, lastWord: newLastWord, isLast } = JSON.parse(line);
+              
+                    // Update messages with new content
+                    setMessages((prev) => {
+                      const newMessages = [...prev];
+                      const lastMessage = newMessages[newMessages.length - 1];
+              
+                      if (lastMessage?.type === "ai") {
+                        // Instead of manipulating the content, append it directly to preserve paragraphs
+                        const updatedContent = lastMessage.content + text; // Append the new text
+              
+                        lastMessage.content = updatedContent;
+                      }
+              
+                      return newMessages;
+                    });
+              
+                    lastWord = newLastWord;
+              
+                    if (isLast) break;
+                  } catch (err) {
+                    // Log JSON parse errors but don't crash the stream
+                    console.error("JSON parse error for line:", line, err);
+                  }
                 }
-            }
+              }              
         } catch (error) {
             // Handle fetch, stream, or unexpected errors
             console.error("Error in chat:", error);
@@ -283,26 +286,26 @@ const ChatStream = () => {
             <Navbar />
             <div className="flex flex-grow w-full overflow-hidden">
                 {/* History Sidebar */}
+
                 <div
-                    className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'w-0 p-0' : 'w-1/5 p-4'
-                        } bg-[#ecf7f3] relative overflow-hidden flex flex-col justify-between`}
+                    className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'w-0 p-0' : 'w-1/5 p-4'} bg-[#ecf7f3] relative overflow-hidden flex flex-col justify-between shadow-lg`}
                 >
-                    {/* Show title only when expanded */}
+                    {/* Show title/content only when expanded */}
                     {!isCollapsed && (
-                        <>
-                            <ChatHistory></ChatHistory>
-                        </>
+                        <ChatHistory className="shadow-xl p-4 rounded-lg bg-white" />
                     )}
                 </div>
 
                 {/* Toggle Button - absolutely positioned outside the sidebar */}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className={`absolute top-40 transition-all duration-300 ${isCollapsed ? 'left-2' : 'left-[20%]' // adjust left value based on sidebar width
-                        } p-1 bg-white rounded-full shadow z-50`}
+                    className={`absolute top-[50%] transform -translate-y-1/2 transition-all duration-300 ${isCollapsed ? 'left-2' : 'left-[20%]'} p-1 bg-white rounded-full shadow z-50`}
+                    aria-expanded={!isCollapsed}
+                    aria-label="Toggle sidebar"
                 >
                     {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                 </button>
+
 
                 {/* Main Content */}
                 <div className={`flex flex-col flex-grow ${isCollapsed ? 'w-full' : 'w-4/5'} transition-all duration-300 mx-4`}>

@@ -143,3 +143,36 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #6b7280;
 }
+
+/* Style for the message container with a fixed width */
+.message-container {
+  display: inline-block;
+  max-width: 300px; /* Adjust this width as needed */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Fading effect (gradient) that appears when the text is truncated */
+.message-container.truncated::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 20px; /* Adjust based on how wide you want the fade */
+  height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+  pointer-events: none;
+}
+
+/* Show the full message on hover */
+.message-container:hover {
+  white-space: normal;
+  overflow: visible;
+}
+
+.message-container.truncated:hover::after {
+  display: none; /* Remove fade effect on hover */
+}
