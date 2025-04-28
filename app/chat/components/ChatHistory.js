@@ -1,50 +1,7 @@
-// "use client";
-
-// import React, { useState, useEffect } from "react";
-
-// const ChatHistory = () => {
-//   const [messages, setMessages] = useState([]);
-
-//   const fetchMessages = async () => {
-//     try {
-//       const response = await fetch('/api/chathistory');
-//       console.log(response)
-//       const data = await response.json();
-//       setMessages(data.messages);
-//     } catch (error) {
-//       console.error('Error fetching messages:', error);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchMessages();
-//   }, []);
-
-//   const formatDate = (date) => {
-//     const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-//     return new Date(date).toLocaleString(undefined, options);
-//   };
-
-//   return (
-//     <div>
-//       <h1 className="text-xl font-semibold">Chat History</h1>
-
-//       {/* Display messages */}
-//       {messages.map((msg) => (
-//         <div key={msg.id}>
-//           <p>{msg.messageText}</p>
-//           <small>{formatDate(msg.sentAt)}</small>
-//         </div>
-//       ))}
-//     </div>
-//   );
-// };
-
-// export default ChatHistory;
-
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { FiMessageCircle } from 'react-icons/fi';
 
 const ChatHistory = () => {
   const [messages, setMessages] = useState([]);
@@ -134,20 +91,20 @@ const ChatHistory = () => {
   const groupedMessages = groupMessagesByDate(messages);
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold">Chat History</h1>
+    <div className="mb-20">
+      <h1 className="text-lg font-semibold text-center">Chat History</h1>
 
       {/* Display Today messages */}
       {groupedMessages.today.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold">Today</h2>
+          <h2 className="text-md font-semibold">Today</h2>
           {groupedMessages.today.map((msg, index) => (
             <div
               key={msg.id}
-              className={`message-container ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
+              className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
-              <p>{msg.messageText}</p>
+              <span>{msg.messageText}</span>
             </div>
           ))}
         </div>
@@ -156,11 +113,11 @@ const ChatHistory = () => {
       {/* Display Yesterday messages */}
       {groupedMessages.yesterday.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold">Yesterday</h2>
+          <h2 className="text-md font-semibold">Yesterday</h2>
           {groupedMessages.yesterday.map((msg, index) => (
             <div
               key={msg.id}
-              className={`message-container ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
+              className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
               <p>{msg.messageText}</p>
@@ -172,11 +129,11 @@ const ChatHistory = () => {
       {/* Display Last 7 Days messages */}
       {groupedMessages.last7Days.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold">Last 7 Days</h2>
+          <h2 className="text-md font-semibold">Last 7 Days</h2>
           {groupedMessages.last7Days.map((msg, index) => (
             <div
               key={msg.id}
-              className={`message-container ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
+              className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
               <p>{msg.messageText}</p>
@@ -188,11 +145,11 @@ const ChatHistory = () => {
       {/* Display Last 30 Days messages */}
       {groupedMessages.last30Days.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold">Last 30 Days</h2>
+          <h2 className="text-md font-semibold">Last 30 Days</h2>
           {groupedMessages.last30Days.map((msg, index) => (
             <div
               key={msg.id}
-              className={`message-container ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
+              className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
               <p>{msg.messageText}</p>
@@ -204,11 +161,11 @@ const ChatHistory = () => {
       {/* Display Previous Months */}
       {Object.keys(groupedMessages.previousMonths).map((monthYear) => (
         <div key={monthYear}>
-          <h2 className="text-lg font-semibold">{monthYear}</h2>
+          <h2 className="text-md font-semibold">{monthYear}</h2>
           {groupedMessages.previousMonths[monthYear].map((msg, index) => (
             <div
               key={msg.id}
-              className={`message-container ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
+              className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
               <p>{msg.messageText}</p>

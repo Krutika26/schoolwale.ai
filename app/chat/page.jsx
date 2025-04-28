@@ -66,10 +66,74 @@ const uploadOptions2 = [
 ];  
 
 // Markdown component to render formatted text
+// const Markdown = ({ content }) => {
+//     // Process the content to handle special cases and formatting
+//     console.log(content);
+//     const processedContent = content
+//         .replace(/\\n/g, "\n")
+//         .replace(/\\\*/g, "*") // Unescape asterisks
+//         .replace(/\\"/g, '"') // Unescape quotation marks
+//         .replace(/##""##/g, "") // Remove ##""## artifacts
+//         .replace(/""\s*([^:]+):\*\*/g, '**"$1:"**') // Handle ""Text:** pattern
+//         .replace(/""([^"]+)""/g, '"$1"') // Handle double quotes
+//         .replace(/(\w+:)"/g, '$1"') // Fix quotes after colons
+//         .replace(/\*\*"([^"]+)"\*\*/g, '**"$1"**'); // Ensure quotes inside bold text
+
+//     return (
+//         <ReactMarkdown
+//             className="prose mt-1 w-full break-words prose-p:leading-relaxed py-3 px-3 mark-down"
+//             remarkPlugins={[remarkGfm]}
+//             components={{
+//                 a: ({ node, ...props }) => (
+//                     <a
+//                         {...props}
+//                         style={{ color: "#27afcf", fontWeight: "bold" }}
+//                     />
+//                 ),
+//                 code({ node, inline, className, children, ...props }) {
+//                     const match = /language-(\w+)/.exec(className || "");
+//                     return !inline && match ? (
+//                         <SyntaxHighlighter
+//                             style={vscDarkPlus}
+//                             language={match[1]}
+//                             PreTag="div"
+//                             {...props}
+//                         >
+//                             {String(children).replace(/\n$/, "")}
+//                         </SyntaxHighlighter>
+//                     ) : (
+//                         <code className={className} {...props}>
+//                             {children}
+//                         </code>
+//                     );
+//                 },
+//                 // Add a custom paragraph renderer to preserve line breaks
+//                 p: ({ children }) => (
+//                     <p className="whitespace-pre-line">{children}</p>
+//                 ),
+//                 strong: ({ children }) => (
+//                     <strong className="font-bold">{children}</strong>
+//                 ),
+//                 blockquote: ({ children }) => (
+//                     <blockquote className="border-l-4 border-gray-500 pl-4 py-2 my-2 italic bg-gray-800 rounded">
+//                         {children}
+//                     </blockquote>
+//                 ),
+//             }}
+//         >
+//             {processedContent}
+//         </ReactMarkdown>
+//     );
+// };
+
 const Markdown = ({ content }) => {
+    // Add greetings or interactive text at the start
+    const greetings = ["Great question!", "You're on the right track!", "Let's dive in!"];
+    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+
     // Process the content to handle special cases and formatting
     const processedContent = content
-        .replace(/\\n/g, "\n")
+        .replace(/\\n/g, "\n") // Handle new lines
         .replace(/\\\*/g, "*") // Unescape asterisks
         .replace(/\\"/g, '"') // Unescape quotation marks
         .replace(/##""##/g, "") // Remove ##""## artifacts
@@ -78,17 +142,35 @@ const Markdown = ({ content }) => {
         .replace(/(\w+:)"/g, '$1"') // Fix quotes after colons
         .replace(/\*\*"([^"]+)"\*\*/g, '**"$1"**'); // Ensure quotes inside bold text
 
+    // Wrap content in a div for custom greeting and any styling
+    const formattedContent = `${randomGreeting} ${processedContent}`;
+
     return (
         <ReactMarkdown
             className="prose mt-1 w-full break-words prose-p:leading-relaxed py-3 px-3 mark-down"
-            remarkPlugins={[remarkGfm]}
+            remarkPlugins={[remarkGfm]} // This will handle things like tables, strikethrough, etc.
             components={{
-                a: ({ node, ...props }) => (
-                    <a
-                        {...props}
-                        style={{ color: "#27afcf", fontWeight: "bold" }}
-                    />
+                // Custom paragraph renderer with greetings and other text
+                p: ({ children }) => (
+                    <p className="whitespace-pre-line">
+                        {children}
+                    </p>
                 ),
+                blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-gray-500 pl-4 py-2 my-2 italic bg-gray-800 rounded">
+                        {children}
+                    </blockquote>
+                ),
+                h1: ({ children }) => (
+                    <h1 className="font-bold text-xl">{children}</h1>
+                ),
+                h2: ({ children }) => (
+                    <h2 className="font-bold text-lg">{children}</h2>
+                ),
+                h3: ({ children }) => (
+                    <h3 className="font-bold text-md">{children}</h3>
+                ),
+                // Handle code blocks
                 code({ node, inline, className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || "");
                     return !inline && match ? (
@@ -106,24 +188,36 @@ const Markdown = ({ content }) => {
                         </code>
                     );
                 },
-                // Add a custom paragraph renderer to preserve line breaks
-                p: ({ children }) => (
-                    <p className="whitespace-pre-line">{children}</p>
+                // Ensure lists are rendered as ordered or unordered correctly
+                ul: ({ children }) => (
+                    <ul className="list-disc pl-5">
+                        {children}
+                    </ul>
+                ),
+                ol: ({ children }) => (
+                    <ol className="list-decimal pl-5">
+                        {children}
+                    </ol>
+                ),
+                li: ({ children }) => (
+                    <li className="my-2">{children}</li>
                 ),
                 strong: ({ children }) => (
                     <strong className="font-bold">{children}</strong>
                 ),
-                blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-gray-500 pl-4 py-2 my-2 italic bg-gray-800 rounded">
-                        {children}
-                    </blockquote>
+                a: ({ node, ...props }) => (
+                    <a
+                        {...props}
+                        style={{ color: "#27afcf", fontWeight: "bold" }}
+                    />
                 ),
             }}
         >
-            {processedContent}
+            {formattedContent}
         </ReactMarkdown>
     );
 };
+
 
 // Main ChatStream component
 const ChatStream = () => {
@@ -184,8 +278,6 @@ const ChatStream = () => {
             normalizedQuestion.includes(normalize(option))
         );
 
-        console.log(isCurriculumBased, isInOptions);
-
         if (isCurriculumBased || isInOptions) {
             // Do something if initialQuestion contains one of the options
             try {
@@ -206,8 +298,6 @@ const ChatStream = () => {
         }
         try {
             // Send request to chat AP
-            console.log(user);
-            console.log(session)
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -234,42 +324,49 @@ const ChatStream = () => {
                 if (done) break;
               
                 const chunk = decoder.decode(value, { stream: true });
-              
-                // Handle potential multiple JSON objects in the chunk
+
+                //Handle potential multiple JSON objects in the chunk
                 const lines = chunk.split('\n').filter((line) => line.trim().startsWith('{') && line.trim().endsWith('}'));
-              
+
                 for (const line of lines) {
-                  try {
-                    const { text, lastWord: newLastWord, isLast } = JSON.parse(line);
-              
-                    // Update messages with new content
-                    setMessages((prev) => {
-                      const newMessages = [...prev];
-                      const lastMessage = newMessages[newMessages.length - 1];
-              
-                      if (lastMessage?.type === "ai") {
-                        // Instead of manipulating the content, append it directly to preserve paragraphs
-                        const updatedContent = lastMessage.content + text; // Append the new text
-              
-                        lastMessage.content = updatedContent;
-                      }
-              
-                      return newMessages;
-                    });
-              
-                    lastWord = newLastWord;
-              
-                    if (isLast) break;
-                  } catch (err) {
-                    // Log JSON parse errors but don't crash the stream
-                    console.error("JSON parse error for line:", line, err);
-                  }
+                    try {
+                        const { text, lastWord: newLastWord, isLast } = JSON.parse(line);
+
+                        setMessages((prev) => {
+                            const newMessages = [...prev];
+                            const lastMessage = newMessages[newMessages.length - 1];
+
+                            if (lastMessage?.type === "ai") {
+                                const existingContent = lastMessage.content;
+
+                                let overlapLength = 0;
+                                const minLength = Math.min(existingContent.length, text.length);
+
+                                for (let i = 0; i < minLength; i++) {
+                                    if (existingContent.endsWith(text.substring(0, i + 1))) {
+                                        overlapLength = i + 1;
+                                    }
+                                }
+
+                                const newContent = text.substring(overlapLength);
+                                lastMessage.content = existingContent + " " + newContent;
+                            }
+
+                            return newMessages;
+                        });
+
+                        lastWord = newLastWord;
+
+                        if (isLast) break;
+                    } catch (err) {
+                        console.error("JSON parse error for line:", line, err);
+                    }
                 }
-              }              
+            }
         } catch (error) {
             // Handle fetch, stream, or unexpected errors
             console.error("Error in chat:", error);
-        
+
             setMessages((prev) => [
                 ...prev,
                 {
@@ -277,7 +374,7 @@ const ChatStream = () => {
                     content: `An error occurred while processing your request: ${error.message}`,
                 },
             ]);
-        }        
+        }
     };
 
     // Render the chat interface
@@ -288,18 +385,18 @@ const ChatStream = () => {
                 {/* History Sidebar */}
 
                 <div
-                    className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'w-0 p-0' : 'w-1/5 p-4'} bg-[#ecf7f3] relative overflow-hidden flex flex-col justify-between shadow-lg`}
+                    className={`sidebar custom-scrollbar transition-all duration-300 ease-in-out ${isCollapsed ? 'w-0 p-0' : 'w-1/5 p-4'} bg-[#ecf7f3] relative overflow-hidden flex flex-col justify-between shadow-lg`}
                 >
                     {/* Show title/content only when expanded */}
                     {!isCollapsed && (
-                        <ChatHistory className="shadow-xl p-4 rounded-lg bg-white" />
+                        <ChatHistory className="shadow-xl p-4 rounded-lg" />
                     )}
                 </div>
 
                 {/* Toggle Button - absolutely positioned outside the sidebar */}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className={`absolute top-[50%] transform -translate-y-1/2 transition-all duration-300 ${isCollapsed ? 'left-2' : 'left-[20%]'} p-1 bg-white rounded-full shadow z-50`}
+                    className={`toggle-button absolute top-[50%] transform -translate-y-1/2 transition-all duration-300 ${isCollapsed ? 'left-2' : 'left-[20%]'} p-1 bg-white rounded-full shadow z-50`}
                     aria-expanded={!isCollapsed}
                     aria-label="Toggle sidebar"
                 >
@@ -308,7 +405,7 @@ const ChatStream = () => {
 
 
                 {/* Main Content */}
-                <div className={`flex flex-col flex-grow ${isCollapsed ? 'w-full' : 'w-4/5'} transition-all duration-300 mx-4`}>
+                <div className={`main-content custom-scrollbar flex flex-col flex-grow ${isCollapsed ? 'w-full' : 'w-4/5'} transition-all duration-300 mx-4`}>
                     {/* Chat messages container */}
                     <div
                         ref={chatContainerRef}

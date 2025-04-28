@@ -16,16 +16,6 @@
   }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -175,4 +165,104 @@ body {
 
 .message-container.truncated:hover::after {
   display: none; /* Remove fade effect on hover */
+}
+
+/* Ensure both sidebar and main content take up the full height */
+/* Sidebar and main content adjustments */
+/* Ensure the body takes the full viewport height */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(var(--background-end-rgb))
+  )
+  rgb(var(--background-start-rgb));
+  overflow: hidden; /* Prevent scrollbar on the whole page */
+}
+
+/* Sidebar and Main Content have separate scrollbars */
+.sidebar, .main-content {
+  overflow-y: auto; /* Enable scroll only for sidebar and main content */
+}
+
+/* Sidebar transition for expanding/collapsing */
+.sidebar {
+  transition: all 0.3s ease-in-out;
+  background-color: #ecf7f3;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  height: calc(100vh - 4rem); /* Sidebar takes full height minus the header height */
+  padding: 1rem;
+  overflow-y: auto; /* Sidebar specific scroll */
+}
+
+/* When the sidebar is collapsed */
+.sidebar.collapsed {
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* When the sidebar is expanded */
+.sidebar.expanded {
+  width: 20%; /* Adjust based on your design */
+}
+
+/* Main Content */
+.main-content {
+  flex-grow: 1;
+  margin-left: 1rem;
+  height: calc(100vh - 4rem); /* Main content takes full height minus the header */
+  overflow-y: auto; /* Main content specific scroll */
+  padding-bottom: 3rem; /* Space for footer */
+}
+
+/* Footer remains at the bottom */
+footer {
+  background-color: #f1f1f1;
+  text-align: center;
+  padding: 1rem;
+  position: relative;
+  bottom: 0;
+  width: 100%;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar {
+  /* Define the width of the scrollbar */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #488184 #ffffff; /* Firefox: thumb and track colors */
+}
+
+/* WebKit-based browsers (Chrome, Safari, Edge) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px; /* Width of the vertical scrollbar */
+  height: 8px; /* Height of the horizontal scrollbar */
+}
+
+/* Track (background) */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #ffffff; /* Dark track */
+  border-radius: 10px; /* Rounded track edges */
+}
+
+/* Handle (thumb) */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #488184; /* Gray thumb */
+  border-radius: 10px; /* Rounded thumb edges */
+  border: 2px solid #ffffff; /* Dark border around thumb */
+}
+
+/* Handle on hover */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #488184; /* Lighter gray when hovering */
+}
+
+/* Hide the scrollbar buttons (arrows at top and bottom) */
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none; /* Hide the arrows */
 }
