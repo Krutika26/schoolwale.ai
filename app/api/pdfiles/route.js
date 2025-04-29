@@ -110,6 +110,7 @@ export async function POST(req) {
     // Create a new FormData instance to send the file to the FAISS server
     const formDataToSend = new FormData();
     formDataToSend.append("file", blob, file.name);
+    formDataToSend.append("file_name", file.name); 
     console.log("file"+formDataToSend)
 
     // Send the file to the external FAISS server (ensure this URL is correct)

@@ -281,7 +281,7 @@ const ChatStream = () => {
         if (isCurriculumBased || isInOptions) {
             // Do something if initialQuestion contains one of the options
             try {
-                const pdfName = "Krutika_Shahane.pdf";
+                const pdfName = "Job Description_Junior UX Designer.pdf";
 
                 const response = await fetch(`/api/pdfetch?source=${encodeURIComponent(pdfName)}`);
 
@@ -289,7 +289,7 @@ const ChatStream = () => {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                const fullText = data.results.map((chunk) => chunk.text).join(" ").trim();
+                const fullText = data.fullText;
 
                 initialQuestion = initialQuestion+ " " +fullText;
             } catch (error) {

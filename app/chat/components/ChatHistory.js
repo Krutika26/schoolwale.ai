@@ -104,7 +104,7 @@ const ChatHistory = () => {
               className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
-              <span>{msg.messageText}</span>
+              <span>{msg.messageJson}</span>
             </div>
           ))}
         </div>
@@ -120,7 +120,7 @@ const ChatHistory = () => {
               className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
-              <p>{msg.messageText}</p>
+              <p>{msg.messageJson}</p>
             </div>
           ))}
         </div>
@@ -136,7 +136,7 @@ const ChatHistory = () => {
               className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
-              <p>{msg.messageText}</p>
+              <p>{msg.messageJson}</p>
             </div>
           ))}
         </div>
@@ -152,7 +152,7 @@ const ChatHistory = () => {
               className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
-              <p>{msg.messageText}</p>
+              <p>{msg.messageJson}</p>
             </div>
           ))}
         </div>
@@ -168,7 +168,7 @@ const ChatHistory = () => {
               className={`message-container flex items-center gap-2 my-1 ${truncatedMessages.includes(index) ? 'truncated' : ''}`}
               ref={(el) => (messageRefs.current[index] = el)}
             >
-              <p>{msg.messageText}</p>
+              <p>{msg.messageJson}</p>
             </div>
           ))}
         </div>

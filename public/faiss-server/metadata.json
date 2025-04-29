@@ -1,1 +1,41 @@
-{"ntotal": 30}
+{
+    "files": [
+        {
+            "name": "unnamed_file",
+            "type": "application/pdf",
+            "vector_id": 0,
+            "vector_count": 1,
+            "text_chunks": [
+                "Krutika Shahane\nProfile Summary\nMotivated Software Developer\nwith strong educational and\npractical backgrounds focused on\ndevelopment. Employs technical\nand programming knowledge to\nbuild and enhance successful\napplications. Expertise includes\nmultiple languages.\nContact details\n@ krutikashahane0@gmail.com\nH +91 72 62 09 51 53\nSkills\n\u2022 Full-Stack Web Development\n\u2022 DSA\n\u2022 Data Science\n\u2022 Artificial Intelligence\nHobbies\n\u2022 Art\n\u2022 Travel\n\u2022 Music\nExperience\nFull-Stack developer - Faulcon Enterprises at UpWork (Remote).\n2024.06\u2013Present\n\u22c4Developed and implemented JavaScript applications using variuos frame-\nworks\n\u22c4Created web services for data exchange between client-server applications\nusing SOAP and RESTful web services.\n\u22c4Optimized database queries by tuning SQL statements for better perform-\nance of the system.\nJunior developer at BBD (Pune).\n2023.07\u20132024.05\n\u22c4Developed and implemented Java applications using Spring frameworks\n\u22c4Develop and deployed applications into test and production environments\naccording to established procedures.\n\u22c4Debugged code to identify and correct errors or defects.\n\u22c4Collaborated with other developers to create efficient solutions based on\nbest practices.\nEducation\nBachelor\u2019s of Engineering. - Pune Institute of Computer Technology.\n2019\u20132023\nCGPA -9.01 First class with distinction\nProjects\nProject created during Apprenticeship at PhonePe - Led the\ncreation of a robust NodeJS, MongoDB, and ReactJS app mirroring\nSharktank. Added features for pitch submission and offer retrieval.\nEnsured an intuitive ReactJS interface, seamlessly integrating front-\nend and back-end for a user-friendly app.\nCertifications\n\u22c4Advanced Certification Course in Data Science & AI by iHUB\nDivyaSampark. IIT Roorkee\n\u22c4Front-end web development with React, Coursera.\n\u22c4Programming IN HTML with JavaScript and CSS, Coursera.\n\u22c4Backend development with NodeJs, Udemy.\n\u22c4LeetCode, Hacker Rank"
+            ]
+        },
+        {
+            "name": "unnamed_file",
+            "type": "application/pdf",
+            "vector_id": 1,
+            "vector_count": 1,
+            "text_chunks": [
+                "System Architecture Overview\nMain Components\nComponent\nTechnology\nRole / Responsibility\nConnects To\nSub-Components Used\nFrontend\nNext.js\n(React-\nbased)\nUI/UX: user input,\nfile\nupload, response render-\ning\nBackend\nOCR\n(Tesseract.js\n-\nbrowser, optional)\nBackend\nNode.js\n+\nEx-\npress/Fastify\nAPI, routing, user auth,\nfile handling\nFrontend,\nAI\nserver,\nSu-\npabase\n\u2022 File\nParsing\n(PyMuPDF\n+\nTesseract.js)\n\u2022 OCR (Node.js)\n\u2022 Storage/Auth\n(Supabase SDK)\nAI Server\nOllama + LLaMA\n(RunPod/Vast.ai)\nRuns LLM + RAG setup\nto respond with answers\nBackend\n\u2022 Vector\nDB\n(FAISS or Chro-\nmaDB)\nDeployment (AI)\nRunPod / Vast.ai\nGPU server for LLaMA +\nOllama + FAISS\nBackend\nN/A\nDeployment\n(Frontend)\nVercel\nHosts frontend web app\nUser\nN/A\nSub-Components Placement\nSub-Component\nTechnology\nUsed By\nPurpose\nFile Parsing\nPyMuPDF\n+\nTesseract.js\nBackend\nExtract text from PDFs/images\nVector DB\nFAISS\n/\nChro-\nmaDB\nAI Server\nStore and retrieve semantic text\nchunks\nStorage/Auth\nSupabase\nBackend\nAuth, file storage, query history\nOCR\nTesseract.js\nFrontend\n/\nBack-\nend\nExtract text from images\n1"
+            ]
+        },
+        {
+            "name": "unnamed_file",
+            "type": "application/pdf",
+            "vector_id": 2,
+            "vector_count": 1,
+            "text_chunks": [
+                "Application for Problem Setter Springboot - INC, Pune\n1 message\nAmit Tomar <amit.t@imocha.io>\nMon, 24 Apr, 2023 at 13:54\nTo: Laxmikant Kharangate <laxmikant@imocha.io>\nCc: Akshay Patil <akshay@imocha.io>\nHey everyone,\nThank you for registering to become a Problem Setter at iMochaWorks. We would like to work with you to\ncreate questions in Springboot for our enterprise customers.\u00a0\nWe already\u00a0have your email, contact information. We request you to please send us your resume along\nwith a link of GitHub(If available) and project link if you have any.\u00a0\nPlease reply to this email with all the above\u00a0information by tomorrow 11:30AM. Let me know if you\u00a0have\nany questions. Looking forward to it.\u00a0\nBest,\nAmit Tomar\nAssociate Community Developer, iMocha"
+            ]
+        },
+        {
+            "name": "Job Description_Junior UX Designer.pdf",
+            "type": "application/pdf",
+            "vector_id": 3,
+            "vector_count": 2,
+            "text_chunks": [
+                "Job Description \n \nJob title \nJunior UX Designer \nReports to \nUX Architect \nExperience \n0 to 2 years \n \nJob purpose \n \n\u2022 To research, study, analyze, document, present and design delightful & \nfunctional experience for the target users across all possible digital mediums.  \n \nDuties and responsibilities \n \n\u2022 Must be an excellent visualizer and analyst. \n\u2022 Should be able to Map User Journeys, User Flows & Design Information \narchitecture of applications across devices. \n\u2022 Should be able to observe, research, analyze and Design an experience across \ndevices. \n\u2022 Analyze and bring out actionable insights and details from available research \ndata & research. \n\u2022 Create personas, use cases, understand & Document requirements, mind maps, \nsite maps, and High fid / Low Fid wireframes \n\u2022 Collaborate with Business Analysts to refine the Business requirements \n\u2022 Collaborate with Visual Designer to bring out the optimal visual experience. \n\u2022 Collaborate with UI Developer to bring out optimal functional experience. \n\u2022 Conduct Usability Testing \n\u2022 Review the application for optimal experience at various points to provide course \ncorrection. \n \n \nQualifications \n \n \n\u2022 B.Des. / M.Des. / Diploma in User Experience Design from a reputed Institutes \n\u2022 Psychology knowledge or certification will be a value add \n\u2022 Excellent spoken and written English \n\u2022 Good understanding of user research techniques, documentation, questioners, \nsystem study, gap analysis. \n\u2022 Good sketching skills \n\u2022 Excellent design skills in interactive and functional interaction design. \n\u2022 Previous experience with a Leading Design firm having exposure working with \nGlobal clients will be preferred.",
+                "Working conditions \n \nWork requires a lot of interpersonal collaboration and coordination. So excellent \ncommunication and interactive skill are a must. Must be a good team player.  \n \nSoftware Knowledge \n \n\u2022 Axure \n\u2022 Adobe XD \n\u2022 Figma \n\u2022 Sketch \n\u2022 InVision Studio \n\u2022 Other tools like Affinity Designer, Dreamweaver, After Effects, Adobe Animate \nwould be added advantage."
+            ]
+        }
+    ]
+}
