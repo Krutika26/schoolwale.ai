@@ -3,7 +3,7 @@ import { ChatMessageHistory } from "langchain/stores/message/in_memory";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Ollama } from "@langchain/ollama";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../../lib/generated/prisma";
 
 const prisma = new PrismaClient();
 // Create a chat history to store messages

@@ -9,29 +9,28 @@ datasource db {
 }
 
 model User {
-  id         String         @id @default(uuid())
-  username   String
-  email      String         @unique
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-  sessions   ChatSession[]
+  id        String        @id @default(uuid())
+  username  String
+  email     String        @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  sessions  ChatSession[]
 }
 
 model ChatSession {
-  id         String         @id @default(uuid())
-  userId     String
-  startedAt  DateTime       @default(now())
-  endedAt    DateTime?
-  messages   ChatMessage[]
-  user       User           @relation(fields: [userId], references: [id])
+  id        String        @id @default(uuid())
+  userId    String
+  startedAt DateTime      @default(now())
+  endedAt   DateTime?
+  messages  ChatMessage[]
+  user      User          @relation(fields: [userId], references: [id])
 }
 
 model ChatMessage {
-  id          String     @id @default(uuid())
+  id          String      @id @default(uuid())
   sessionId   String
-  sender      String     // 'user' or 'bot'
+  sender      String // 'user' or 'bot'
   messageJson Json
-  sentAt      DateTime   @default(now())
+  sentAt      DateTime    @default(now())
   session     ChatSession @relation(fields: [sessionId], references: [id])
 }
-

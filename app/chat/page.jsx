@@ -65,6 +65,29 @@ const uploadOptions2 = [
     }
 ];  
 
+const classOptions = Array.from({ length: 12 }, (_, i) => `Class ${i + 1}`);
+
+const subjectOptions = [
+  "Mathematics",
+  "Science",
+  "English",
+  "Social Science",
+  "History",
+  "Geography",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Computer Science",
+  "Economics",
+  "Civics",
+  "Environmental Studies",
+  "Hindi",
+  "Sanskrit",
+  "General Knowledge"
+];
+
+const boardBasedOptions = ["All subjects", "ICSE", "CBSE", "International Board", "State Board"];
+
 // Markdown component to render formatted text
 // const Markdown = ({ content }) => {
 //     // Process the content to handle special cases and formatting
@@ -224,7 +247,8 @@ const ChatStream = () => {
     // State variables for managing chat
     const { session, isLoaded: sessionLoaded } = useSession();
     const { user, isLoaded: userLoaded } = useUser();
-
+    const [classSelection, setClassSelection] = useState('');
+    const [subjectSelection, setSubjectSelection] = useState('');
     const [selectedOptionIndex, setSelectedOptionIndex] = useState(null);
     const [selectedSubOption, setSelectedSubOption] = useState("");
     const [userInput, setUserInput] = useState("");
@@ -233,6 +257,16 @@ const ChatStream = () => {
     const [chatStarted, setChatStarted] = useState(false);
     const chatContainerRef = useRef(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    // Find the selected category's options
+    const selectedCategory = defaultOptions.find(category =>
+        category.options.includes(selectedSubOption)
+    );
+    const [uploadedFile, setUploadedFile] = useState(null);
+
+    const handleFileUpload = (file) => {
+        console.log("File received in parent:", file);
+        setUploadedFile(file);
+    }
 
     // Scroll to bottom of chat when new messages are added
     useEffect(() => {
@@ -281,7 +315,17 @@ const ChatStream = () => {
         if (isCurriculumBased || isInOptions) {
             // Do something if initialQuestion contains one of the options
             try {
-                const pdfName = "Job Description_Junior UX Designer.pdf";
+                let pdfName = "";
+
+                console.log(uploadedFile.name)
+
+                if(isCurriculumBased){
+                    pdfName = initialQuestion;
+                }if(isInOptions){
+                    pdfName = uploadedFile.name;
+                }
+
+                console.log(pdfName)
 
                 const response = await fetch(`/api/pdfetch?source=${encodeURIComponent(pdfName)}`);
 
@@ -459,7 +503,7 @@ const ChatStream = () => {
                     <div className="mb-4">
                         {!chatStarted && !selectedSubOption && (
                             <div>
-                                <DocumentUpload></DocumentUpload>
+                                <DocumentUpload onFileUpload={handleFileUpload}></DocumentUpload>
                                 {/* Task Options */}
                                 <div className="mt-4 text-center">
                                     <p className="text-gray-600 mb-3">
@@ -572,11 +616,45 @@ const ChatStream = () => {
                     </motion.div>
                     {/* Input area only for the selected sub-option */}
                     {selectedSubOption && !chatStarted && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                                <div className="bg-white w-1/2 h-1/2 rounded-lg shadow-lg flex flex-col justify-center items-center p-6">
-                                    <h2 className="text-md font-semibold mb-4 text-center">
-                                        Ask a query about <span className="text-blue-600">{selectedSubOption}</span>
-                                    </h2>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                            <div className="bg-white w-1/2 h-1/2 rounded-lg shadow-lg flex flex-col justify-center items-center p-6">
+                                <h2 className="text-md font-semibold mb-4 text-center">
+                                    Ask a query about <span className="text-blue-600">{selectedSubOption}</span>
+                                </h2>
+
+                                {boardBasedOptions.includes(selectedSubOption) ? (
+                                    <div className="space-y-4 w-full">
+                                        <div>
+                                            <label htmlFor="class" className="block text-sm font-semibold mb-2">Select Class</label>
+                                            <select
+                                                id="class"
+                                                className="w-full px-4 py-2 text-lg text-black border border-gray-300 rounded"
+                                                onChange={(e) => setClassSelection(e.target.value)}
+                                                value={classSelection}
+                                            >
+                                                <option value="">Select Class</option>
+                                                {classOptions.map((cls) => (
+                                                    <option key={cls} value={cls}>{cls}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label htmlFor="subject" className="block text-sm font-semibold mb-2">Select Subject</label>
+                                            <select
+                                                id="subject"
+                                                className="w-full px-4 py-2 text-lg text-black border border-gray-300 rounded"
+                                                onChange={(e) => setSubjectSelection(e.target.value)}
+                                                value={subjectSelection}
+                                            >
+                                                <option value="">Select Subject</option>
+                                                {subjectOptions.map((subj) => (
+                                                    <option key={subj} value={subj}>{subj}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                ) : (
                                     <textarea
                                         rows={1}
                                         className="w-full px-4 py-2 text-lg text-black border border-gray-300 rounded mb-4 resize-none overflow-auto placeholder:text-xl placeholder:leading-8 max-h-40"
@@ -584,30 +662,40 @@ const ChatStream = () => {
                                         value={userInput}
                                         onChange={(e) => {
                                             setUserInput(e.target.value);
-                                            e.target.style.height = 'auto'; // reset height
-                                            e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`; // grow until 160px (max-h-40)
+                                            e.target.style.height = 'auto';
+                                            e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
                                         }}
                                     />
-                                    <div className="flex space-x-4">
-                                        <button
-                                            onClick={() => startChat(`${selectedSubOption} ${userInput}`)}
-                                            className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-sm"
-                                        >
-                                            Submit
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setSelectedSubOption(null);
-                                                setUserInput('');
-                                            }}
-                                            className="bg-gray-300 text-black px-6 py-2 rounded hover:bg-gray-400 text-sm"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
+                                )}
+
+                                <div className="flex space-x-4 mt-4">
+                                    <button
+                                        onClick={() => {
+                                            const query = boardBasedOptions.includes(selectedSubOption)
+                                                ? `Board: ${selectedSubOption}, Class: ${classSelection}, Subject: ${subjectSelection}`
+                                                : `${selectedSubOption} ${userInput}`;
+                                            startChat(query);
+                                        }}
+                                        className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-sm"
+                                    >
+                                        Submit
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedSubOption(null);
+                                            setUserInput('');
+                                            setClassSelection('');
+                                            setSubjectSelection('');
+                                        }}
+                                        className="bg-gray-300 text-black px-6 py-2 rounded hover:bg-gray-400 text-sm"
+                                    >
+                                        Cancel
+                                    </button>
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
+
                 </div>
             </div>
         </div>

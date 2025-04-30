@@ -8,9 +8,9 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
-    "noEmit": true,
+    "noEmit": false, // Allow emitting of compiled JS files for Prisma to work properly
     "incremental": true,
-    "module": "esnext",
+    "module": "CommonJS", // Change to CommonJS for compatibility with Prisma Client
     "esModuleInterop": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -21,11 +21,13 @@
         "name": "next"
       }
     ],
-    "target": "ES2017"
+    "target": "ES2017",
+    "outDir": "./dist" // Optional: ensures the output goes to a dist folder
   },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
+    "prisma/**/*.ts",  // Include your Prisma folder for compilation
     "**/*.ts",
     "**/*.tsx"
   ],
