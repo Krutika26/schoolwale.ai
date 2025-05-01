@@ -16,6 +16,12 @@ import { useUser, useSession } from "@clerk/nextjs";
 import ChatHistory  from "./components/ChatHistory"
 import dynamic from "next/dynamic";
 import { CiMicrophoneOn , CiMicrophoneOff } from "react-icons/ci";
+import EmojiConvertor from "emoji-js"; // 👈 Add emoji-js
+
+
+const emoji = new EmojiConvertor();
+emoji.replace_mode = "unified";
+emoji.allow_native = true;
 
 const icons = [<TbBulbFilled className="text-[#edb949]"/>, <FaBookOpen className="text-[#76b2a4]"/>, <TbTextGrammar className="text-[#346a7e]"/>, <BiSolidPlanet className="text-[#76b2a4]"/>];
 const colors = ['bg-[#fff7de]', 'bg-[#e9f5f1]', 'bg-[#c6e3dd]', 'bg-[#e9f5f1]'];
@@ -151,9 +157,6 @@ const boardBasedOptions = ["All subjects", "ICSE", "CBSE", "International Board"
 // };
 
 const Markdown = ({ content }) => {
-    // Add greetings or interactive text at the start
-    const greetings = ["Great question!", "You're on the right track!", "Let's dive in!"];
-    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
 
     // Process the content to handle special cases and formatting
     const processedContent = content
@@ -167,7 +170,7 @@ const Markdown = ({ content }) => {
         .replace(/\*\*"([^"]+)"\*\*/g, '**"$1"**'); // Ensure quotes inside bold text
 
     // Wrap content in a div for custom greeting and any styling
-    const formattedContent = `${randomGreeting} ${processedContent}`;
+    const formattedContent = `${processedContent}`;
 
     return (
         <ReactMarkdown
@@ -470,7 +473,8 @@ const ChatStream = () => {
 
                 for (const line of lines) {
                     try {
-                        const { text, lastWord: newLastWord, isLast } = JSON.parse(line);
+                        const eline = emoji.replace_colons(line)
+                        const { text, lastWord: newLastWord, isLast } = JSON.parse(eline);
 
                         setMessages((prev) => {
                             const newMessages = [...prev];
@@ -673,23 +677,23 @@ const ChatStream = () => {
                         >
                             {isListening ? <CiMicrophoneOff className="text-xl" style={{ color: '#4a7f85' }}/> : <CiMicrophoneOn className="text-xl" style={{ color: '#4a7f85' }}/>}
                         </button>
-                        <button
-                type="button"
-                onClick={handleTranslateSelectedText}
-                className="mt-2 p-2 rounded-xl bg-[#effaf8] text-gray-600 focus:outline-none"
-            >
-                Translate Selected Text
-            </button>
+                        {/* <button
+                            type="button"
+                            onClick={handleTranslateSelectedText}
+                            className="mt-2 p-2 rounded-xl bg-[#effaf8] text-gray-600 focus:outline-none"
+                        >
+                            Translate Selected Text
+                        </button>
 
-            <div>
-                <h3>Translated Text:</h3>
-                <p>{translatedQuestion}</p>
-            </div>
+                        <div>
+                            <h3>Translated Text:</h3>
+                            <p>{translatedQuestion}</p>
+                        </div>
 
-            <div>
-                <h3>Response:</h3>
-                <p>{response}</p>
-            </div>
+                        <div>
+                            <h3>Response:</h3>
+                            <p>{response}</p>
+                        </div> */}
                     </form>
                     {/* Chat input area */}
                     <motion.div

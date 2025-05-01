@@ -115,21 +115,24 @@ export default function GroupedMessagesAll({ groupedMessages }) {
           );
       })}
 
-          {/* Popup */}
-          {showPopup && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white p-6 rounded-xl max-w-md w-full max-h-[40vh] overflow-y-auto shadow-lg">
-                      <div className="text-gray-800 whitespace-pre-wrap">{popupContent}</div>
-                      <button
-                          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                          onClick={() => setShowPopup(false)}
-                      >
-                          Close
-                      </button>
-                  </div>
+      {/* Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl max-w-3xl w-full shadow-xl overflow-hidden">
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              <div className="text-gray-800 whitespace-pre-wrap">
+                {popupContent}
               </div>
-          )}
-
+              <button
+                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={() => setShowPopup(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
   );
 }

@@ -2,9 +2,14 @@ import { Ollama } from "@langchain/ollama";
 import { PrismaClient } from "../../../lib/generated/prisma";
 import { ChatMessageHistory } from "langchain/stores/message/in_memory";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import EmojiConvertor from "emoji-js"; // 👈 Add emoji-js
 
 const prisma = new PrismaClient();
 const mainChatMessageHistory = new ChatMessageHistory();
+
+const emoji = new EmojiConvertor();
+emoji.replace_mode = "unified";
+emoji.allow_native = true;
 
 export async function POST(req) {
     const body = await req.json();
@@ -25,10 +30,14 @@ export async function POST(req) {
         let fullResponse = "";
         let buffer = "";
 
+        const formattedPrompt = `Please format your response using Markdown and include appropriate emoji shortcodes like :bulb:, :rocket:, etc. Start with a helpful greeting based on the time of day.
+
+Question: ${question}`;
+
         const stream = new ReadableStream({
             async start(controller) {
                 try {
-                    for await (const chunk of await model.stream(question)) {
+                    for await (const chunk of await model.stream(formattedPrompt)) {
                         fullResponse += chunk;
                         buffer += chunk;
 
@@ -55,14 +64,16 @@ export async function POST(req) {
 
                     controller.close();
 
-                    // ✅ Post-stream logic: log and store full response
-                    console.log(`Full AI Response: ${fullResponse}`);
+                    // ✅ Replace emoji shortcodes with real emojis
+                    const withEmojis = emoji.replace_colons(fullResponse);
 
-                    await mainChatMessageHistory.addMessage(new AIMessage(fullResponse));
+                    console.log(`Final AI Response: ${withEmojis}`);
+
+                    await mainChatMessageHistory.addMessage(new AIMessage(withEmojis));
 
                     const newMessagesJson = [
                         { type: "human", text: question },
-                        { type: "ai", text: fullResponse },
+                        { type: "ai", text: withEmojis },
                     ];
 
                     const existingSession = await prisma.chatSession.findUnique({
@@ -103,7 +114,6 @@ export async function POST(req) {
             },
         });
 
-        // Pass the stream to the frontend
         const reader = stream.getReader();
         const streamBody = new ReadableStream({
             start(controller) {
@@ -124,7 +134,6 @@ export async function POST(req) {
             },
         });
 
-        // Return the streamed response to the client
         return new Response(streamBody, {
             headers: { "Content-Type": "application/json" },
         });

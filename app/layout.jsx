@@ -12,6 +12,9 @@ export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
       <html lang="en" className="h-full" suppressHydrationWarning>
+        <head>
+          <meta charSet="UTF-8" />
+        </head>
         <body className="min-h-screen flex flex-col bg-white text-black dark:bg-black dark:text-white">
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             {/* Header */}
