@@ -15,6 +15,7 @@ import DocumentUpload from "./components/DocumentUpload";
 import { useUser, useSession } from "@clerk/nextjs";
 import ChatHistory  from "./components/ChatHistory"
 import dynamic from "next/dynamic";
+import { CiMicrophoneOn , CiMicrophoneOff } from "react-icons/ci";
 
 const icons = [<TbBulbFilled className="text-[#edb949]"/>, <FaBookOpen className="text-[#76b2a4]"/>, <TbTextGrammar className="text-[#346a7e]"/>, <BiSolidPlanet className="text-[#76b2a4]"/>];
 const colors = ['bg-[#fff7de]', 'bg-[#e9f5f1]', 'bg-[#c6e3dd]', 'bg-[#e9f5f1]'];
@@ -245,6 +246,10 @@ const Markdown = ({ content }) => {
 // Main ChatStream component
 const ChatStream = () => {
     // State variables for managing chat
+    const [language, setLanguage] = useState("en"); // Language preference, default to English
+    const [selectedText, setSelectedText] = useState(""); 
+    const [translatedQuestion, setTranslatedQuestion] = useState(""); // Store translated input
+    const [response, setResponse] = useState(""); // Store the response
     const { session, isLoaded: sessionLoaded } = useSession();
     const { user, isLoaded: userLoaded } = useUser();
     const [classSelection, setClassSelection] = useState('');
@@ -262,6 +267,45 @@ const ChatStream = () => {
         category.options.includes(selectedSubOption)
     );
     const [uploadedFile, setUploadedFile] = useState(null);
+    const [isListening, setIsListening] = useState(false);
+    const [recognition, setRecognition] = useState(null); // Store recognition instance
+
+    useEffect(() => {
+        // Ensure this only runs on the client side
+        if (typeof window !== "undefined") {
+            const SpeechRecognition =
+                window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (SpeechRecognition) {
+                setRecognition(new SpeechRecognition()); // Instantiate SpeechRecognition
+            }
+        }
+    }, []);
+
+    const startListening = () => {
+        if (recognition) {
+            recognition.start();
+
+            recognition.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                setQuestion(transcript);
+            };
+
+            recognition.onend = () => {
+                setIsListening(false);
+            };
+
+            setIsListening(true); // Update state when listening starts
+        }
+    };
+
+    const stopListening = () => {
+        if (recognition) {
+            recognition.stop();
+        }
+        setIsListening(false); // Update state when listening stops
+    };
+
 
     const handleFileUpload = (file) => {
         console.log("File received in parent:", file);
@@ -278,8 +322,60 @@ const ChatStream = () => {
 
     // Handle form submission
     const handleSubmit = async (e) => {
+        //const translatedText = await translateText(question, "en");
+
+        // Process the translated question here (e.g., send to AI agent)
+        //const aiResponse = await getAIResponse(translatedText); // Placeholder for AI response
+
+        // Translate the AI response back to the user’s language
+        //const translatedResponse = await translateText(aiResponse, language);
+        //setResponse(translatedResponse);
         e.preventDefault();
         await startChat(question);
+    };
+
+    const translateText = async (text) => {
+        try {
+            const response = await fetch("/api/translate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ inputText: text }),
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+    
+            const data = await response.json(); // Only call this once!
+            console.log("Translated Text:", data.translatedText);
+            return data.translatedText;
+    
+        } catch (error) {
+            console.error("Translation error:", error);
+            return text;
+        }
+    };
+    
+
+    const getAIResponse = async (text) => {
+        // Placeholder for AI response logic (e.g., calling an AI model with the input text)
+        // For now, just returning the same text as a response for testing
+        return `AI Response to: ${text}`;
+    };
+
+    const handleTextSelection = (selected) => {
+        setSelectedText(selected);
+    };
+
+    const handleTranslateSelectedText = async () => {
+        if (!selectedText) {
+            alert("Please select some text to translate.");
+            return;
+        }
+        const translated = await translateText(selectedText);
+        setTranslatedQuestion(translated); // Display translated text
     };
 
     // Start or continue the chat
@@ -557,6 +653,7 @@ const ChatStream = () => {
                             value={question}
                             onChange={(e) => setQuestion(e.target.value)}
                             placeholder="Ask anything here..."
+                            //onKeyUp={(e) => handleTextSelection(e.target.value)}
                             className="flex-grow p-4 rounded-xl bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#effaf8] border border-gray-200 shadow-inner"
                         />
                         <motion.button
@@ -567,6 +664,32 @@ const ChatStream = () => {
                         >
                             <FiSend className="text-xl" style={{ color: '#4a7f85' }} />
                         </motion.button>
+
+                        {/* Voice Input Button */}
+                        <button
+                            type="button"
+                            onClick={isListening ? stopListening : startListening}
+                            className="ml-2 p-2 rounded-xl bg-[#effaf8] text-gray-600 focus:outline-none"
+                        >
+                            {isListening ? <CiMicrophoneOff className="text-xl" style={{ color: '#4a7f85' }}/> : <CiMicrophoneOn className="text-xl" style={{ color: '#4a7f85' }}/>}
+                        </button>
+                        <button
+                type="button"
+                onClick={handleTranslateSelectedText}
+                className="mt-2 p-2 rounded-xl bg-[#effaf8] text-gray-600 focus:outline-none"
+            >
+                Translate Selected Text
+            </button>
+
+            <div>
+                <h3>Translated Text:</h3>
+                <p>{translatedQuestion}</p>
+            </div>
+
+            <div>
+                <h3>Response:</h3>
+                <p>{response}</p>
+            </div>
                     </form>
                     {/* Chat input area */}
                     <motion.div
@@ -655,17 +778,26 @@ const ChatStream = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <textarea
-                                        rows={1}
-                                        className="w-full px-4 py-2 text-lg text-black border border-gray-300 rounded mb-4 resize-none overflow-auto placeholder:text-xl placeholder:leading-8 max-h-40"
-                                        placeholder={`Enter ${selectedSubOption} query...`}
-                                        value={userInput}
-                                        onChange={(e) => {
-                                            setUserInput(e.target.value);
-                                            e.target.style.height = 'auto';
-                                            e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
-                                        }}
-                                    />
+                                    <div className="flex">
+                                        <textarea
+                                            rows={1}
+                                            className="w-full px-4 py-2 text-lg text-black border border-gray-300 rounded mb-4 resize-none overflow-auto placeholder:text-xl placeholder:leading-8 max-h-40"
+                                            placeholder={`Enter ${selectedSubOption} query...`}
+                                            value={userInput}
+                                            onChange={(e) => {
+                                                setUserInput(e.target.value);
+                                                e.target.style.height = 'auto';
+                                                e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={isListening ? stopListening : startListening}
+                                            className="m-2 p-2 rounded-xl bg-[#effaf8] focus:outline-none"
+                                        >
+                                            {isListening ? <CiMicrophoneOff className="text-xl" style={{ color: '#4a7f85' }} /> : <CiMicrophoneOn className="text-xl" style={{ color: '#4a7f85' }} />}
+                                        </button>
+                                    </div>
                                 )}
 
                                 <div className="flex space-x-4 mt-4">

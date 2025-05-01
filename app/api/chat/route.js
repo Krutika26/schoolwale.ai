@@ -1,130 +1,136 @@
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { ChatMessageHistory } from "langchain/stores/message/in_memory";
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Ollama } from "@langchain/ollama";
 import { PrismaClient } from "../../../lib/generated/prisma";
+import { ChatMessageHistory } from "langchain/stores/message/in_memory";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 const prisma = new PrismaClient();
-// Create a chat history to store messages
 const mainChatMessageHistory = new ChatMessageHistory();
 
-// Define the main function that handles POST requests
 export async function POST(req) {
     const body = await req.json();
     const { sender, session, question } = body;
-    console.log(session);
+
+    console.log(`Session: ${session.id}`);
+    console.log(`Question: ${question}`);
+
     try {
-        // Set up the AI model (Ollama) with specific configurations
         const model = new Ollama({
             model: "codeqwen",
             baseUrl: "http://127.0.0.1:11434",
             stream: true,
         });
-        console.log(question);
 
-        // Add the user's question to the chat history
         await mainChatMessageHistory.addMessage(new HumanMessage(question));
-        // Create a stream to handle the AI's response
+
+        let fullResponse = "";
+        let buffer = "";
+
         const stream = new ReadableStream({
             async start(controller) {
-                let fullResponse = "";
-                let buffer = "";
-                let lastWord = "";
-                // Process the AI's response in chunks
+                try {
+                    for await (const chunk of await model.stream(question)) {
+                        fullResponse += chunk;
+                        buffer += chunk;
 
-                for await (const chunk of await model.stream(question)) {
-                    fullResponse += chunk;
-                    buffer += chunk;
-                    // Split the buffer into words
-                    console.log(chunk);
-                    const words = buffer.split(/\s+/);
-                    // If we have 15 or more words, send them to the client
-                    if (words.length >= 15) {
-                        const completeWords = words.slice(0, -1).join(" ");
+                        const words = buffer.split(/\s+/);
+                        if (words.length >= 15) {
+                            const completeWords = words.slice(0, -1).join(" ");
+                            controller.enqueue(
+                                new TextEncoder().encode(
+                                    JSON.stringify({ text: completeWords })
+                                )
+                            );
+                            buffer = words[words.length - 1];
+                        }
+                    }
+
+                    // Handle any remaining content
+                    if (buffer) {
                         controller.enqueue(
                             new TextEncoder().encode(
-                                JSON.stringify({
-                                    text: completeWords,
-                                    lastWord: lastWord,
-                                })
+                                JSON.stringify({ text: buffer, isLast: true })
                             )
                         );
-                        // Keep the last word in the buffer
-
-                        buffer = words[words.length - 1];
-                        lastWord = completeWords.split(/\s+/).pop();
                     }
-                }
-                // Send any remaining content
 
-                if (buffer) {
-                    controller.enqueue(
-                        new TextEncoder().encode(
-                            JSON.stringify({
-                                text: buffer,
-                                lastWord: lastWord,
-                                isLast: true,
-                            })
-                        )
-                    );
+                    controller.close();
+
+                    // ✅ Post-stream logic: log and store full response
+                    console.log(`Full AI Response: ${fullResponse}`);
+
+                    await mainChatMessageHistory.addMessage(new AIMessage(fullResponse));
+
+                    const newMessagesJson = [
+                        { type: "human", text: question },
+                        { type: "ai", text: fullResponse },
+                    ];
+
+                    const existingSession = await prisma.chatSession.findUnique({
+                        where: { id: session.id },
+                        include: { messages: true },
+                    });
+
+                    if (existingSession) {
+                        await prisma.chatMessage.create({
+                            data: {
+                                sessionId: session.id,
+                                sender: String(sender),
+                                messageJson: newMessagesJson,
+                            },
+                        });
+                    } else {
+                        await prisma.chatSession.create({
+                            data: {
+                                id: session.id,
+                                userId: sender,
+                                startedAt: session.createdAt,
+                                endedAt: session.expireAt,
+                            },
+                        });
+
+                        await prisma.chatMessage.create({
+                            data: {
+                                sessionId: session.id,
+                                sender: String(sender),
+                                messageJson: newMessagesJson,
+                            },
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error during streaming or DB write:", error);
+                    controller.error(error);
                 }
-                // Add the AI's full response to the chat history
-                await mainChatMessageHistory.addMessage(
-                    new AIMessage(fullResponse)
-                );
-                controller.close();
             },
         });
-        // Convert chat history to text
-        const chatHistoryString = mainChatMessageHistory.messages
-            .map((message) => message.text)
-            .join("\n");
 
-        // Check if the session exists
-        const existingSession = await prisma.chatSession.findUnique({
-            where: { id: session.id },
-            include: { messages: true }, // Include related messages in the query
+        // Pass the stream to the frontend
+        const reader = stream.getReader();
+        const streamBody = new ReadableStream({
+            start(controller) {
+                const push = () => {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            controller.close();
+                            return;
+                        }
+                        controller.enqueue(value);
+                        push(); // continue reading
+                    }).catch(err => {
+                        console.error("Stream reading error:", err);
+                        controller.error(err);
+                    });
+                };
+                push();
+            },
         });
 
-        console.log("history" +chatHistoryString)
-
-        if (existingSession) {
-            // Create a new ChatMessage for the current message
-            await prisma.chatMessage.create({
-                data: {
-                    sessionId: session.id, // Ensure sessionId is a string
-                    sender: String(sender),
-                    messageJson: mainChatMessageHistory,
-                },
-            });
-        } else {
-            // If the session doesn't exist, create a new session
-            await prisma.chatSession.create({
-                data: {
-                    id: session.id,
-                    userId: sender,
-                    startedAt: session.createdAt,
-                    endedAt: session.expireAt,
-                },
-            });
-            // Create a new ChatMessage for the first message
-            await prisma.chatMessage.create({
-                data: {
-                    sessionId: session.id, // Ensure sessionId is a string
-                    sender: String(sender),
-                    messageJson: mainChatMessageHistory,
-                },
-            });
-        }
-
-        // Return the stream as the response
-        return new Response(stream, {
+        // Return the streamed response to the client
+        return new Response(streamBody, {
             headers: { "Content-Type": "application/json" },
         });
+
     } catch (error) {
-        // Handle any errors and return an error response
-        console.error(error);
+        console.error("Fatal API error:", error);
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
