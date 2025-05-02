@@ -99,48 +99,49 @@ def add_vectors():
 @app.route('/search', methods=['GET'])
 def search():
     # Retrieve the 'name' query parameter
-    name_query = request.args.get('name')  # Expecting 'name' for file search
-    print(f"Received search query for name: {name_query}")
+    name_query = request.args.get('name')  # e.g., "Class 1 Maths.pdf"
+    print(f"Received search query for name: '{name_query}'")
 
     if not name_query:
         return jsonify({"error": "No 'name' query provided"}), 400
 
     try:
-        # Load metadata from file
         with open("metadata.json", "r") as f:
             metadata = json.load(f)
     except Exception as e:
         return jsonify({"error": f"Failed to load metadata: {str(e)}"}), 500
 
-    # Search for the file in metadata by name
-    file_metadata = next((file for file in metadata["files"] if file["name"] == name_query), None)
+    # Debug: print all available names
+    print("Available file names in metadata:")
+    for file in metadata.get("files", []):
+        print(f"- '{file['name']}'")
+
+    # Perform robust name comparison
+    file_metadata = next(
+        (file for file in metadata.get("files", []) 
+         if file.get("name", "").strip().lower() == name_query.strip().lower()), 
+        None
+    )
 
     if not file_metadata:
-        return jsonify({"error": "File not found by name"}), 404
-    
+        return jsonify({"error": f"File '{name_query}' not found in metadata"}), 404
+
     index = get_index()
     if index is None:
         return jsonify({"error": "FAISS index not found"}), 500
-    print(f"{file_metadata} {index}")
 
-    # Retrieve the vector_id and vector_count from metadata
     vector_id = file_metadata["vector_id"]
     vector_count = file_metadata["vector_count"]
-    print(f"{vector_id} {vector_count}")
+    print(f"Vector ID: {vector_id}, Count: {vector_count}")
 
-    # Extract the vectors from FAISS based on the vector_id and vector_count
     try:
-        # Fetch the vectors from the FAISS index
         vectors = index.reconstruct_n(vector_id, vector_count)
-        print(f"Received vectors for {name_query} {vectors}")
-
-        # Return the vectors as part of the response
         return jsonify({
             "name": file_metadata["name"],
             "type": file_metadata["type"],
             "vector_id": vector_id,
             "vector_count": vector_count,
-            "vectors": vectors.tolist(),  # Convert vectors to list for JSON serialization
+            "vectors": vectors.tolist(),
             "results": file_metadata["text_chunks"]
         }), 200
     except Exception as e:

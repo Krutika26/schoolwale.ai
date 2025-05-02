@@ -86,7 +86,7 @@ const ChatHistory = () => {
   const groupedMessages = groupMessagesByDate(messages);
 
   return (
-    <div className="mb-20">
+    <div>
       <h1 className="text-lg font-semibold text-center">Chat History</h1>
       <GroupedMessagesAll groupedMessages={groupedMessages} />
     </div>

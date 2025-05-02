@@ -93,8 +93,45 @@ export default function GroupedMessagesAll({ groupedMessages }) {
               <div key={categoryTitle} className="mb-4">
                 <h3 className="text-md font-semibold mb-2">{categoryTitle}</h3>
                 {messages.map((msg) => {
-                  const humanMsg = msg.messageJson.find(m => m.type === 'human')?.text || "";
                   const aiMsg = msg.messageJson.find(m => m.type === 'ai')?.text || "";
+                  let humanMsg = msg.messageJson.find(m => m.type === 'human')?.text || "";
+
+                  // Case 1: Starts with "Quiz on" — extract up to 'Subject: ...'
+                  if (humanMsg.startsWith("Quiz on")) {
+                    const boardIndex = humanMsg.indexOf("Board:");
+                    const classIndex = humanMsg.indexOf("Class:");
+                    const subjectIndex = humanMsg.indexOf("Subject:");
+
+                    if (boardIndex !== -1 && classIndex !== -1 && subjectIndex !== -1) {
+                      const boardPart = humanMsg.slice(boardIndex, classIndex).trim().replace(/,+$/, "");
+                      const classPart = humanMsg.slice(classIndex, subjectIndex).trim().replace(/,+$/, "");
+                      const subjectPart = humanMsg.slice(subjectIndex).split(" ")[0] + " " + humanMsg.slice(subjectIndex).split(" ")[1]; // gets "Subject: Maths"
+
+                      humanMsg = `Quiz on ${boardPart}, ${classPart}, ${subjectPart}`;
+                    }
+                  }
+
+                  // Case 2: Commands like "Summarize data", "Explain data", etc. + PDF name
+                  else {
+                    const actionPrefixes = [
+                      "Explain data",
+                      "Summarize data",
+                      "Analyze data",
+                      "Solve the Attached",
+                      "Verify My Answer"
+                    ];
+
+                    for (const prefix of actionPrefixes) {
+                      if (humanMsg.startsWith(prefix)) {
+                        const words = humanMsg.split(/\s+/);
+                        const pdfName = words.find(w => w.endsWith(".pdf"));
+                        if (pdfName) {
+                          humanMsg = `${prefix} ${pdfName}`.trim();
+                        }
+                        break;
+                      }
+                    }
+                  }
 
                   return (
                     <div

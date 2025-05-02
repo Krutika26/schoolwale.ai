@@ -75,7 +75,7 @@ const uploadOptions2 = [
 const classOptions = Array.from({ length: 12 }, (_, i) => `Class ${i + 1}`);
 
 const subjectOptions = [
-  "Mathematics",
+  "Maths",
   "Science",
   "English",
   "Social Science",
@@ -411,22 +411,44 @@ const ChatStream = () => {
             normalizedQuestion.includes(normalize(option))
         );
 
+        console.log(initialQuestion)
+        console.log("board option"+isCurriculumBased,isInOptions)
+
         if (isCurriculumBased || isInOptions) {
             // Do something if initialQuestion contains one of the options
             try {
                 let pdfName = "";
 
-                console.log(uploadedFile.name)
+                if (isCurriculumBased) {
+                    
+                    if (!initialQuestion.startsWith("Quiz on ")) {
+                        initialQuestion = "Quiz on ," + initialQuestion;
+                    }
+                
+                    let parts = initialQuestion.split(",").map(p => p.trim());
 
-                if(isCurriculumBased){
-                    pdfName = initialQuestion;
+                    console.log(parts)
+
+                    let boardPart = parts.find(p => p.startsWith("Board:"));
+                    let classPart = parts.find(p => p.startsWith("Class:"));
+                    let subjectPart = parts.find(p => p.startsWith("Subject:"));
+
+                    console.log(boardPart,classPart,subjectPart)
+
+                    if (boardPart && classPart && subjectPart) {
+                        let boardValue = boardPart.split("Board:")[1].trim();
+                        let classValue = classPart.split("Class:")[1].trim();
+                        let subjectValue = subjectPart.split("Subject:")[1].trim();
+                        pdfName = `${boardValue} ${classValue} ${subjectValue}.pdf`;
+                    }
                 }if(isInOptions){
                     pdfName = uploadedFile.name;
+                    initialQuestion = initialQuestion+ " " + pdfName;
                 }
 
-                console.log(pdfName)
+                console.log("pdf name" + pdfName)
 
-                const response = await fetch(`/api/pdfetch?source=${encodeURIComponent(pdfName)}`);
+                const response = await fetch(`/api/pdfetch?source=${pdfName}`);
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -527,26 +549,24 @@ const ChatStream = () => {
             <Navbar />
             <div className="flex flex-grow w-full overflow-hidden">
                 {/* History Sidebar */}
-
-                <div
-                    className={`sidebar custom-scrollbar transition-all duration-300 ease-in-out ${isCollapsed ? 'w-0 p-0' : 'w-1/5 p-4'} bg-[#ecf7f3] relative overflow-hidden flex flex-col justify-between shadow-lg`}
-                >
-                    {/* Show title/content only when expanded */}
-                    {!isCollapsed && (
-                        <ChatHistory className="shadow-xl p-4 rounded-lg" />
-                    )}
-                </div>
-
                 {/* Toggle Button - absolutely positioned outside the sidebar */}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className={`toggle-button absolute top-[50%] transform -translate-y-1/2 transition-all duration-300 ${isCollapsed ? 'left-2' : 'left-[20%]'} p-1 bg-white rounded-full shadow z-50`}
+                    className={`toggle-button absolute top-[50%] transform -translate-y-1/2 transition-all duration-300 ${isCollapsed ? 'left-3' : 'left-[25%]'} p-1 bg-white rounded-full shadow z-50`}
                     aria-expanded={!isCollapsed}
                     aria-label="Toggle sidebar"
                 >
                     {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                 </button>
 
+                <div
+                    className={`sidebar custom-scrollbar transition-all duration-300 ease-in-out ${isCollapsed ? 'w-0 p-0' : 'w-[400px] p-4'} bg-[#ecf7f3] relative overflow-hidden flex flex-col justify-between shadow-lg`}
+                >
+                    {/* Show title/content only when expanded */}
+                    {!isCollapsed && (
+                        <ChatHistory className="shadow-xl p-4 rounded-lg" />
+                    )}
+                </div>
 
                 {/* Main Content */}
                 <div className={`main-content custom-scrollbar flex flex-col flex-grow ${isCollapsed ? 'w-full' : 'w-4/5'} transition-all duration-300 mx-4`}>
