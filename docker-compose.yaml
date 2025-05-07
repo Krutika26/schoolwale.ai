@@ -1,0 +1,15 @@
+version: '3'
+services:
+  indictrans:
+    build:
+      context: ./indictrans2/docker
+    image: indictrans2-lite
+    ports:
+      - "8080:8080"
+
+  sd-onnx:
+    build:
+      context: ./sd-onnx
+    image: sd-onnx
+    ports:
+      - "5000:5000"
