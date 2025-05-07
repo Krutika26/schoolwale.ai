@@ -8,10 +8,8 @@ export async function GET(req) {
     return new Response(JSON.stringify({ error: "Missing 'source' query parameter." }), { status: 400 });
   }
 
-  console.log(`http://127.0.0.1:5000/search?name=${source}`)
-
   try {
-    const serverRes = await fetch(`http://127.0.0.1:5000/search?name=${source}`);
+    const serverRes = await fetch(`http://127.0.0.1:8000/search?name=${source}`);
     
     // Check if the server response is valid JSON
     const text = await serverRes.text(); // Read the response as text

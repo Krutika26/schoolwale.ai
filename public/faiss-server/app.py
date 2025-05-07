@@ -190,5 +190,6 @@ def process_image(file):
     
     return np.random.rand(10, 128).astype(np.float32)
 
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=True)

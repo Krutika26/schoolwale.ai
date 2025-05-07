@@ -1,0 +1,11 @@
+flask
+PyMuPDF
+faiss-cpu
+mysql-connector-python
+python-docx
+Pillow
+requests
+flask_cors
+numpy
+scikit-learn
+sentence-transformers

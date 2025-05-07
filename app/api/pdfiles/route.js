@@ -30,7 +30,7 @@ export async function POST(req) {
     console.log("file"+formDataToSend)
 
     // Send the file to the external FAISS server (ensure this URL is correct)
-    const serverRes = await fetch("http://127.0.0.1:5000/add_vectors", {
+    const serverRes = await fetch("http://127.0.0.1:8000/add_vectors", {
       method: "POST",
       body: formDataToSend,
     });
