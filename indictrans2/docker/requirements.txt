@@ -1,7 +1,0 @@
-torch>=1.10
-transformers>=4.30
-sentencepiece
-uvicorn
-fastapi
-Cython
-git+https://github.com/irshadbhat/indic-trans.git
