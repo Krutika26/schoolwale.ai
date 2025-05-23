@@ -95,97 +95,6 @@ const subjectOptions = [
 
 const boardBasedOptions = ["All subjects", "ICSE", "CBSE", "International Board", "State Board"];
 
-// const Markdown = ({ content }) => {
-
-
-//     // Process the content to handle special cases and formatting
-//     const processedContent = content
-//         .replace(/\\n/g, "\n") // Handle new lines
-//         .replace(/\\\*/g, "*") // Unescape asterisks
-//         .replace(/\\"/g, '"') // Unescape quotation marks
-//         .replace(/##""##/g, "") // Remove ##""## artifacts
-//         .replace(/""\s*([^:]+):\*\*/g, '**"$1:"**') // Handle ""Text:** pattern
-//         .replace(/""([^"]+)""/g, '"$1"') // Handle double quotes
-//         .replace(/(\w+:)"/g, '$1"') // Fix quotes after colons
-//         .replace(/\*\*"([^"]+)"\*\*/g, '**"$1"**'); // Ensure quotes inside bold text
-
-//     // Wrap content in a div for custom greeting and any styling
-//     const formattedContent = `${processedContent}`;
-
-//     return (
-//         <ReactMarkdown
-//             className="prose mt-1 w-full break-words prose-p:leading-relaxed py-3 px-3 mark-down"
-//             remarkPlugins={[remarkGfm]} // This will handle things like tables, strikethrough, etc.
-//             components={{
-//                 // Custom paragraph renderer with greetings and other text
-//                 p: ({ children }) => (
-//                     <p className="whitespace-pre-line">
-//                         {children}
-//                     </p>
-//                 ),
-//                 blockquote: ({ children }) => (
-//                     <blockquote className="border-l-4 border-gray-500 pl-4 py-2 my-2 italic bg-gray-800 rounded">
-//                         {children}
-//                     </blockquote>
-//                 ),
-//                 h1: ({ children }) => (
-//                     <h1 className="font-bold text-xl">{children}</h1>
-//                 ),
-//                 h2: ({ children }) => (
-//                     <h2 className="font-bold text-lg">{children}</h2>
-//                 ),
-//                 h3: ({ children }) => (
-//                     <h3 className="font-bold text-md">{children}</h3>
-//                 ),
-//                 // Handle code blocks
-//                 code({ node, inline, className, children, ...props }) {
-//                     const match = /language-(\w+)/.exec(className || "");
-//                     return !inline && match ? (
-//                         <SyntaxHighlighter
-//                             style={vscDarkPlus}
-//                             language={match[1]}
-//                             PreTag="div"
-//                             {...props}
-//                         >
-//                             {String(children).replace(/\n$/, "")}
-//                         </SyntaxHighlighter>
-//                     ) : (
-//                         <code className={className} {...props}>
-//                             {children}
-//                         </code>
-//                     );
-//                 },
-//                 // Ensure lists are rendered as ordered or unordered correctly
-//                 ul: ({ children }) => (
-//                     <ul className="list-disc pl-5">
-//                         {children}
-//                     </ul>
-//                 ),
-//                 ol: ({ children }) => (
-//                     <ol className="list-decimal pl-5">
-//                         {children}
-//                     </ol>
-//                 ),
-//                 li: ({ children }) => (
-//                     <li className="my-2">{children}</li>
-//                 ),
-//                 strong: ({ children }) => (
-//                     <strong className="font-bold">{children}</strong>
-//                 ),
-//                 a: ({ node, ...props }) => (
-//                     <a
-//                         {...props}
-//                         style={{ color: "#27afcf", fontWeight: "bold" }}
-//                     />
-//                 ),
-//             }}
-//         >
-//             {formattedContent}
-//         </ReactMarkdown>
-//     );
-// };
-
-
 const Markdown = ({ content }) => {
   const [imageUrl, setImageUrl] = useState(null);
 
@@ -280,7 +189,7 @@ const Markdown = ({ content }) => {
 // Main ChatStream component
 const ChatStream = () => {
     // State variables for managing chat
-    const [language, setLanguage] = useState("en"); // Language preference, default to English
+    const [targetLanguage, setTargetLanguage] = useState("hi"); // Default to Hindi // Language preference, default to English
     const [selectedText, setSelectedText] = useState(""); 
     const [translatedQuestion, setTranslatedQuestion] = useState(""); // Store translated input
     const [response, setResponse] = useState(""); // Store the response
@@ -362,7 +271,7 @@ const ChatStream = () => {
         await startChat(question);
     };
 
-    const translateText = async (text) => {
+    const translateText = async (text, targetLanguage) => {
         console.log(text)
         try {
             const response = await fetch("/api/translate", {
@@ -372,7 +281,7 @@ const ChatStream = () => {
                 },
                 body: JSON.stringify({
                     text,
-                    targetLanguage: "hi"
+                    targetLanguage
                  }),
             });
 
@@ -722,45 +631,90 @@ const ChatStream = () => {
                                 className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
                                 onClick={() => setIsPopupOpen(false)} // Close on outside click
                             >
-                                <div
-                                    className="bg-white p-6 rounded-xl max-w-md w-full max-h-[80vh] overflow-y-auto"
-                                    onClick={(e) => e.stopPropagation()} // Prevent closing on popup content click
-                                >
-                                    <h3 className="mb-4 text-lg font-semibold">Enter text to translate</h3>
-                                    <textarea
-                                        className="w-full p-2 border rounded mb-4"
-                                        rows={4}
-                                        value={inputText}
-                                        onChange={(e) => setInputText(e.target.value)}
-                                        placeholder="Type or paste text here..."
-                                        autoFocus
-                                    />
+                                <div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPopupOpen(true)}
+                                        className="mt-2 p-2 rounded-xl bg-[#effaf8] text-gray-600 focus:outline-none"
+                                    >
+                                        Translate
+                                    </button>
 
-                                    <div className="flex justify-end space-x-2 mb-4">
-                                        <button
-                                            type="button"
-                                            className="px-4 py-2 rounded bg-gray-300"
+                                    {isPopupOpen && (
+                                        <div
+                                            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
                                             onClick={() => setIsPopupOpen(false)}
                                         >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="px-4 py-2 rounded bg-blue-500 text-white"
-                                            onClick={async () => {
-                                                const translated = await translateText(inputText);
-                                                setTranslatedQuestion(translated);
-                                                setInputText("");
-                                            }}
-                                        >
-                                            Translate
-                                        </button>
-                                    </div>
+                                            <div
+                                                className="bg-white p-6 rounded-xl max-w-md w-full max-h-[80vh] overflow-y-auto"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <h3 className="mb-4 text-lg font-semibold">Enter text to translate</h3>
 
-                                    <div className="mt-4 border-t pt-4">
-                                        <h3 className="font-semibold mb-2">Translated Text:</h3>
-                                        <p>{translatedQuestion}</p>
-                                    </div>
+                                                {/* Language Dropdown */}
+                                                <div className="mb-4">
+                                                    <label htmlFor="language-select" className="block text-sm font-medium mb-1">
+                                                        Select target language:
+                                                    </label>
+                                                    <select
+                                                        id="language-select"
+                                                        value={targetLanguage}
+                                                        onChange={(e) => setTargetLanguage(e.target.value)}
+                                                        className="w-full border rounded p-2"
+                                                    >
+                                                        <option value="hi">Hindi</option>
+                                                        <option value="gu">Gujarati</option>
+                                                        <option value="bn">Bengali</option>
+                                                        <option value="te">Telugu</option>
+                                                        <option value="ta">Tamil</option>
+                                                        <option value="kn">Kannada</option>
+                                                        <option value="ml">Malayalam</option>
+                                                        <option value="mr">Marathi</option>
+                                                        <option value="ur">Urdu</option>
+                                                        <option value="en">English</option>
+                                                    </select>
+                                                </div>
+
+                                                {/* Textarea */}
+                                                <textarea
+                                                    className="w-full p-2 border rounded mb-4"
+                                                    rows={4}
+                                                    value={inputText}
+                                                    onChange={(e) => setInputText(e.target.value)}
+                                                    placeholder="Type or paste text here..."
+                                                    autoFocus
+                                                />
+
+                                                {/* Buttons */}
+                                                <div className="flex justify-end space-x-2 mb-4">
+                                                    <button
+                                                        type="button"
+                                                        className="px-4 py-2 rounded bg-gray-300"
+                                                        onClick={() => setIsPopupOpen(false)}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="px-4 py-2 rounded bg-blue-500 text-white"
+                                                        onClick={async () => {
+                                                            const translated = await translateText(inputText, targetLanguage);
+                                                            setTranslatedQuestion(translated);
+                                                            setInputText("");
+                                                        }}
+                                                    >
+                                                        Translate
+                                                    </button>
+                                                </div>
+
+                                                {/* Translated Output */}
+                                                <div className="mt-4 border-t pt-4">
+                                                    <h3 className="font-semibold mb-2">Translated Text:</h3>
+                                                    <p>{translatedQuestion}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
