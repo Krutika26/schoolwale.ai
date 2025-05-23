@@ -95,12 +95,12 @@ const subjectOptions = [
 
 const boardBasedOptions = ["All subjects", "ICSE", "CBSE", "International Board", "State Board"];
 
-// Markdown component to render formatted text
 // const Markdown = ({ content }) => {
+
+
 //     // Process the content to handle special cases and formatting
-//     console.log(content);
 //     const processedContent = content
-//         .replace(/\\n/g, "\n")
+//         .replace(/\\n/g, "\n") // Handle new lines
 //         .replace(/\\\*/g, "*") // Unescape asterisks
 //         .replace(/\\"/g, '"') // Unescape quotation marks
 //         .replace(/##""##/g, "") // Remove ##""## artifacts
@@ -109,17 +109,35 @@ const boardBasedOptions = ["All subjects", "ICSE", "CBSE", "International Board"
 //         .replace(/(\w+:)"/g, '$1"') // Fix quotes after colons
 //         .replace(/\*\*"([^"]+)"\*\*/g, '**"$1"**'); // Ensure quotes inside bold text
 
+//     // Wrap content in a div for custom greeting and any styling
+//     const formattedContent = `${processedContent}`;
+
 //     return (
 //         <ReactMarkdown
 //             className="prose mt-1 w-full break-words prose-p:leading-relaxed py-3 px-3 mark-down"
-//             remarkPlugins={[remarkGfm]}
+//             remarkPlugins={[remarkGfm]} // This will handle things like tables, strikethrough, etc.
 //             components={{
-//                 a: ({ node, ...props }) => (
-//                     <a
-//                         {...props}
-//                         style={{ color: "#27afcf", fontWeight: "bold" }}
-//                     />
+//                 // Custom paragraph renderer with greetings and other text
+//                 p: ({ children }) => (
+//                     <p className="whitespace-pre-line">
+//                         {children}
+//                     </p>
 //                 ),
+//                 blockquote: ({ children }) => (
+//                     <blockquote className="border-l-4 border-gray-500 pl-4 py-2 my-2 italic bg-gray-800 rounded">
+//                         {children}
+//                     </blockquote>
+//                 ),
+//                 h1: ({ children }) => (
+//                     <h1 className="font-bold text-xl">{children}</h1>
+//                 ),
+//                 h2: ({ children }) => (
+//                     <h2 className="font-bold text-lg">{children}</h2>
+//                 ),
+//                 h3: ({ children }) => (
+//                     <h3 className="font-bold text-md">{children}</h3>
+//                 ),
+//                 // Handle code blocks
 //                 code({ node, inline, className, children, ...props }) {
 //                     const match = /language-(\w+)/.exec(className || "");
 //                     return !inline && match ? (
@@ -137,112 +155,125 @@ const boardBasedOptions = ["All subjects", "ICSE", "CBSE", "International Board"
 //                         </code>
 //                     );
 //                 },
-//                 // Add a custom paragraph renderer to preserve line breaks
-//                 p: ({ children }) => (
-//                     <p className="whitespace-pre-line">{children}</p>
+//                 // Ensure lists are rendered as ordered or unordered correctly
+//                 ul: ({ children }) => (
+//                     <ul className="list-disc pl-5">
+//                         {children}
+//                     </ul>
+//                 ),
+//                 ol: ({ children }) => (
+//                     <ol className="list-decimal pl-5">
+//                         {children}
+//                     </ol>
+//                 ),
+//                 li: ({ children }) => (
+//                     <li className="my-2">{children}</li>
 //                 ),
 //                 strong: ({ children }) => (
 //                     <strong className="font-bold">{children}</strong>
 //                 ),
-//                 blockquote: ({ children }) => (
-//                     <blockquote className="border-l-4 border-gray-500 pl-4 py-2 my-2 italic bg-gray-800 rounded">
-//                         {children}
-//                     </blockquote>
+//                 a: ({ node, ...props }) => (
+//                     <a
+//                         {...props}
+//                         style={{ color: "#27afcf", fontWeight: "bold" }}
+//                     />
 //                 ),
 //             }}
 //         >
-//             {processedContent}
+//             {formattedContent}
 //         </ReactMarkdown>
 //     );
 // };
 
+
 const Markdown = ({ content }) => {
+  const [imageUrl, setImageUrl] = useState(null);
 
-    // Process the content to handle special cases and formatting
-    const processedContent = content
-        .replace(/\\n/g, "\n") // Handle new lines
-        .replace(/\\\*/g, "*") // Unescape asterisks
-        .replace(/\\"/g, '"') // Unescape quotation marks
-        .replace(/##""##/g, "") // Remove ##""## artifacts
-        .replace(/""\s*([^:]+):\*\*/g, '**"$1:"**') // Handle ""Text:** pattern
-        .replace(/""([^"]+)""/g, '"$1"') // Handle double quotes
-        .replace(/(\w+:)"/g, '$1"') // Fix quotes after colons
-        .replace(/\*\*"([^"]+)"\*\*/g, '**"$1"**'); // Ensure quotes inside bold text
+  useEffect(() => {
+    const generateImage = async () => {
+      try {
+        const res = await fetch("/api/image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: content }),
+        });
 
-    // Wrap content in a div for custom greeting and any styling
-    const formattedContent = `${processedContent}`;
+        const data = await res.json();
+        if (data.image) {
+          setImageUrl(data.image);
+        } else {
+          console.error("No image URL returned:", data);
+        }
+      } catch (err) {
+        console.error("Image generation failed:", err);
+      }
+    };
 
-    return (
-        <ReactMarkdown
-            className="prose mt-1 w-full break-words prose-p:leading-relaxed py-3 px-3 mark-down"
-            remarkPlugins={[remarkGfm]} // This will handle things like tables, strikethrough, etc.
-            components={{
-                // Custom paragraph renderer with greetings and other text
-                p: ({ children }) => (
-                    <p className="whitespace-pre-line">
-                        {children}
-                    </p>
-                ),
-                blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-gray-500 pl-4 py-2 my-2 italic bg-gray-800 rounded">
-                        {children}
-                    </blockquote>
-                ),
-                h1: ({ children }) => (
-                    <h1 className="font-bold text-xl">{children}</h1>
-                ),
-                h2: ({ children }) => (
-                    <h2 className="font-bold text-lg">{children}</h2>
-                ),
-                h3: ({ children }) => (
-                    <h3 className="font-bold text-md">{children}</h3>
-                ),
-                // Handle code blocks
-                code({ node, inline, className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || "");
-                    return !inline && match ? (
-                        <SyntaxHighlighter
-                            style={vscDarkPlus}
-                            language={match[1]}
-                            PreTag="div"
-                            {...props}
-                        >
-                            {String(children).replace(/\n$/, "")}
-                        </SyntaxHighlighter>
-                    ) : (
-                        <code className={className} {...props}>
-                            {children}
-                        </code>
-                    );
-                },
-                // Ensure lists are rendered as ordered or unordered correctly
-                ul: ({ children }) => (
-                    <ul className="list-disc pl-5">
-                        {children}
-                    </ul>
-                ),
-                ol: ({ children }) => (
-                    <ol className="list-decimal pl-5">
-                        {children}
-                    </ol>
-                ),
-                li: ({ children }) => (
-                    <li className="my-2">{children}</li>
-                ),
-                strong: ({ children }) => (
-                    <strong className="font-bold">{children}</strong>
-                ),
-                a: ({ node, ...props }) => (
-                    <a
-                        {...props}
-                        style={{ color: "#27afcf", fontWeight: "bold" }}
-                    />
-                ),
-            }}
-        >
-            {formattedContent}
-        </ReactMarkdown>
-    );
+    if (content?.length > 10) generateImage();
+  }, [content]);
+
+  const processedContent = content
+    .replace(/\\n/g, "\n")
+    .replace(/\\\*/g, "*")
+    .replace(/\\"/g, '"')
+    .replace(/##""##/g, "")
+    .replace(/""\s*([^:]+):\*\*/g, '**"$1:"**')
+    .replace(/""([^"]+)""/g, '"$1"')
+    .replace(/(\w+:)"/g, '$1"')
+    .replace(/\*\*"([^"]+)"\*\*/g, '**"$1"**');
+
+  return (
+    <div className="py-3 px-3">
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt="Generated"
+          className="rounded-xl mb-4 w-full max-w-2xl object-cover"
+          style={{ width: 256, height: 256 }}
+        />
+      )}
+
+      <ReactMarkdown
+        className="prose mt-1 w-full break-words prose-p:leading-relaxed mark-down"
+        remarkPlugins={[remarkGfm]}
+        components={{
+          p: ({ children }) => <p className="whitespace-pre-line">{children}</p>,
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-gray-500 pl-4 py-2 my-2 italic bg-gray-800 rounded">
+              {children}
+            </blockquote>
+          ),
+          h1: ({ children }) => <h1 className="font-bold text-xl">{children}</h1>,
+          h2: ({ children }) => <h2 className="font-bold text-lg">{children}</h2>,
+          h3: ({ children }) => <h3 className="font-bold text-md">{children}</h3>,
+          code({ inline, className, children, ...props }) {
+            const match = /language-(\w+)/.exec(className || "");
+            return !inline && match ? (
+              <SyntaxHighlighter
+                style={vscDarkPlus}
+                language={match[1]}
+                PreTag="div"
+                {...props}
+              >
+                {String(children).replace(/\n$/, "")}
+              </SyntaxHighlighter>
+            ) : (
+              <code className={className} {...props}>{children}</code>
+            );
+          },
+          ul: ({ children }) => <ul className="list-disc pl-5">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal pl-5">{children}</ol>,
+          li: ({ children }) => <li className="my-2">{children}</li>,
+          strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+          a: ({ ...props }) => (
+            <a {...props} style={{ color: "#27afcf", fontWeight: "bold" }} />
+          ),
+        }}
+      >
+        {processedContent}
+      </ReactMarkdown>
+    </div>
+  );
 };
 
 
@@ -265,6 +296,8 @@ const ChatStream = () => {
     const [chatStarted, setChatStarted] = useState(false);
     const chatContainerRef = useRef(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [inputText, setInputText] = useState("");
     // Find the selected category's options
     const selectedCategory = defaultOptions.find(category =>
         category.options.includes(selectedSubOption)
@@ -325,60 +358,40 @@ const ChatStream = () => {
 
     // Handle form submission
     const handleSubmit = async (e) => {
-        //const translatedText = await translateText(question, "en");
-
-        // Process the translated question here (e.g., send to AI agent)
-        //const aiResponse = await getAIResponse(translatedText); // Placeholder for AI response
-
-        // Translate the AI response back to the user’s language
-        //const translatedResponse = await translateText(aiResponse, language);
-        //setResponse(translatedResponse);
         e.preventDefault();
         await startChat(question);
     };
 
     const translateText = async (text) => {
+        console.log(text)
         try {
             const response = await fetch("/api/translate", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ inputText: text }),
+                body: JSON.stringify({
+                    text,
+                    targetLanguage: "hi"
+                 }),
             });
+
+            console.log(response)
     
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
     
             const data = await response.json(); // Only call this once!
-            console.log("Translated Text:", data.translatedText);
-            return data.translatedText;
+            console.log(data)
+            console.log("Translated Text:", data.translated);
+            setTranslatedQuestion(data.translated)
+            return data.translated;
     
         } catch (error) {
             console.error("Translation error:", error);
             return text;
         }
-    };
-    
-
-    const getAIResponse = async (text) => {
-        // Placeholder for AI response logic (e.g., calling an AI model with the input text)
-        // For now, just returning the same text as a response for testing
-        return `AI Response to: ${text}`;
-    };
-
-    const handleTextSelection = (selected) => {
-        setSelectedText(selected);
-    };
-
-    const handleTranslateSelectedText = async () => {
-        if (!selectedText) {
-            alert("Please select some text to translate.");
-            return;
-        }
-        const translated = await translateText(selectedText);
-        setTranslatedQuestion(translated); // Display translated text
     };
 
     // Start or continue the chat
@@ -695,25 +708,62 @@ const ChatStream = () => {
                             onClick={isListening ? stopListening : startListening}
                             className="ml-2 p-2 rounded-xl bg-[#effaf8] text-gray-600 focus:outline-none"
                         >
-                            {isListening ? <CiMicrophoneOff className="text-xl" style={{ color: '#4a7f85' }}/> : <CiMicrophoneOn className="text-xl" style={{ color: '#4a7f85' }}/>}
+                            {isListening ? <CiMicrophoneOff className="text-xl" style={{ color: '#4a7f85' }} /> : <CiMicrophoneOn className="text-xl" style={{ color: '#4a7f85' }} />}
                         </button>
-                        {/* <button
+                        <button
                             type="button"
-                            onClick={handleTranslateSelectedText}
-                            className="mt-2 p-2 rounded-xl bg-[#effaf8] text-gray-600 focus:outline-none"
+                            onClick={() => setIsPopupOpen(true)}
+                            className="ml-1 p-2 rounded-xl bg-[#effaf8] text-gray-600 focus:outline-none"
                         >
-                            Translate Selected Text
+                            Translate
                         </button>
+                        {isPopupOpen && (
+                            <div
+                                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                                onClick={() => setIsPopupOpen(false)} // Close on outside click
+                            >
+                                <div
+                                    className="bg-white p-6 rounded-xl max-w-md w-full max-h-[80vh] overflow-y-auto"
+                                    onClick={(e) => e.stopPropagation()} // Prevent closing on popup content click
+                                >
+                                    <h3 className="mb-4 text-lg font-semibold">Enter text to translate</h3>
+                                    <textarea
+                                        className="w-full p-2 border rounded mb-4"
+                                        rows={4}
+                                        value={inputText}
+                                        onChange={(e) => setInputText(e.target.value)}
+                                        placeholder="Type or paste text here..."
+                                        autoFocus
+                                    />
 
-                        <div>
-                            <h3>Translated Text:</h3>
-                            <p>{translatedQuestion}</p>
-                        </div>
+                                    <div className="flex justify-end space-x-2 mb-4">
+                                        <button
+                                            type="button"
+                                            className="px-4 py-2 rounded bg-gray-300"
+                                            onClick={() => setIsPopupOpen(false)}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="px-4 py-2 rounded bg-blue-500 text-white"
+                                            onClick={async () => {
+                                                const translated = await translateText(inputText);
+                                                setTranslatedQuestion(translated);
+                                                setInputText("");
+                                            }}
+                                        >
+                                            Translate
+                                        </button>
+                                    </div>
 
-                        <div>
-                            <h3>Response:</h3>
-                            <p>{response}</p>
-                        </div> */}
+                                    <div className="mt-4 border-t pt-4">
+                                        <h3 className="font-semibold mb-2">Translated Text:</h3>
+                                        <p>{translatedQuestion}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </form>
                     {/* Chat input area */}
                     <motion.div

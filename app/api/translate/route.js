@@ -1,31 +1,35 @@
-// app/api/translate/route.js
-const express = require('express');
-const axios = require('axios');
+export async function POST(req) {
+  try {
+    const body = await req.json();
+    const { text, targetLanguage } = body;
 
-const router = express.Router();
-
-// POST endpoint to call the IndicTrans2 translation service
-router.post('/', async (req, res) => {
-    const { text, targetLanguage } = req.body;
-
-    // Validate the request body
     if (!text || !targetLanguage) {
-        return res.status(400).json({ error: "Both 'text' and 'targetLanguage' are required." });
+      return Response.json({ error: "Both 'text' and 'targetLanguage' are required." }, { status: 400 });
     }
 
-    try {
-        // Send request to IndicTrans2 API running in the 'indictrans' service (e.g., localhost:8080)
-        const response = await axios.post('http://localhost:8080/transliterate', {
-            text: text,
-            target_language: targetLanguage,
-        });
+    const endpoint = "https://api.cognitive.microsofttranslator.com"; // ✅ Or region-specific if needed
+    const region = "global";
+    const subscriptionKey = "8lZ2qj8FjsqsDIJTTGo1kRVuJWyW7LNWIMX8eA0u0XqSxOfC8u4bJQQJ99BEACULyCpXJ3w3AAAbACOGybJc";
 
-        // Return the translation response from IndicTrans2 API
-        res.json(response.data);
-    } catch (error) {
-        console.error("Error calling IndicTrans2:", error);
-        res.status(500).json({ error: "An error occurred while calling the IndicTrans2 API." });
-    }
-});
+    const url = `${endpoint}/translate?api-version=3.0&to=${targetLanguage}`;
 
-module.exports = router;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': subscriptionKey,
+        'Ocp-Apim-Subscription-Region': region,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify([{ Text: text }])
+    });
+
+    const data = await res.json();
+
+    const translated = data?.[0]?.translations?.[0]?.text || "Translation not found";
+    return Response.json({ translated });
+
+  } catch (err) {
+    console.error("Azure Translator Error:", err);
+    return Response.json({ error: "An error occurred while translating." }, { status: 500 });
+  }
+}
